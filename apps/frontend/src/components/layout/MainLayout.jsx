@@ -1,6 +1,16 @@
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import GroupIcon from '@mui/icons-material/Group';
+import {
+  AccountCircle as AccountCircleIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  CalendarMonth as CalendarMonthIcon,
+  Checklist as ChecklistIcon,
+  CorporateFare as CorporateFareIcon,
+  Event as EventIcon,
+  Group as GroupIcon,
+  Help as HelpIcon,
+  History as HistoryIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
+
 import MenuIcon from '@mui/icons-material/Menu';
 
 import { Button, Container, ListItemButton, Stack, useMediaQuery } from '@mui/material';
@@ -18,11 +28,10 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 
-import { styled } from '@mui/material/styles';
-//import { replaceDiacritics } from '../../utils/common.util';
 import logo from '@app/assets/UNIZA_TEXT_B.png';
 import * as authService from '@app/pages/auth/authService';
 import { replaceDiacritics } from '@app/utils/common.util';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import ProfileMenu from './profile-menu.component';
@@ -73,19 +82,38 @@ const MainLayout = ({ children }) => {
     navigate('/auth/login');
   };
 
-  const drawerOption = [
-    {
-      title: 'Dashboard',
-      navTo: '/',
-      icon: <DashboardIcon />
-    }
-  ];
+  const drawerOption = [];
+
   if (user?.isAdmin) {
-    drawerOption.push({
-      title: 'Používatelia',
-      navTo: '/admin/users',
-      icon: <GroupIcon />
-    });
+    drawerOption.push(
+      { title: 'Správca', type: 'header' },
+      { title: 'Panel správcu', navTo: '/', icon: <AdminPanelSettingsIcon /> },
+      { title: 'Domov', type: 'header' },
+      { title: 'Môj účet', navTo: '/account', icon: <AccountCircleIcon /> },
+      { title: 'Navigácia', type: 'header' },
+      { title: 'Používatelia', navTo: '/admin/users', icon: <GroupIcon /> },
+      { title: 'Externé školy', navTo: '/admin/external-schools', icon: <CorporateFareIcon /> }
+    );
+  }
+
+  const commonOptions = [
+    { title: 'Cvičenia', navTo: '/admin/exercises', icon: <WorkIcon /> },
+    { title: 'Udalosti', navTo: '/admin/events', icon: <EventIcon /> },
+    { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+    { title: 'Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
+    { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
+    { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
+  ];
+
+  if (!user?.isAdmin) {
+    drawerOption.push(
+      { title: 'Domov', type: 'header' },
+      { title: 'Môj účet', navTo: '/account', icon: <AccountCircleIcon /> },
+      { title: 'Navigácia', type: 'header' }
+    );
+    drawerOption.push(...commonOptions);
+  } else {
+    drawerOption.push(...commonOptions);
   }
 
   const drawer = (
@@ -99,7 +127,17 @@ const MainLayout = ({ children }) => {
         <List component="nav">
           {drawerOption.map((item) => {
             const NavItem = styled(ListItemButton)({});
-            return (
+
+            return item.type === 'header' ? (
+              // Render header items as plain text, not clickable
+              <ListItem key={item.title} disablePadding>
+                <ListItemText
+                  primary={item.title}
+                  sx={{ color: 'gray', fontWeight: 'bold', paddingLeft: '16px', cursor: 'default' }}
+                />
+              </ListItem>
+            ) : (
+              // Render regular menu items as clickable
               <ListItem key={item.title} disablePadding>
                 <NavItem
                   onClick={handleDrawerClose}
