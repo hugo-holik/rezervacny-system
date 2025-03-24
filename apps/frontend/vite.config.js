@@ -16,6 +16,7 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     host: true,
+    allowedHosts: ['frontend'],
     hmr: {
       path: '/ws'
     }
