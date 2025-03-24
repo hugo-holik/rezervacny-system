@@ -8,7 +8,7 @@ services:
             dockerfile: Dockerfile.dev
             context: ./apps/nginx
         ports:
-            - '3050:80'
+            - '3060:80'
     backend:
         build:
             context: ./apps/backend
