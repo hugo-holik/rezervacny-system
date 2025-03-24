@@ -31,6 +31,8 @@ app.use(authMiddleware);
 app.use("/public", require("./src/routes/public"));
 app.use("/user", require("./src/routes/user"));
 app.use("/admin", require("./src/routes/admin"));
+app.use("/externalSchool", require("./src/routes/externalSchool"));
+
 
 app.use(function (req, res, next) {
   throwError("Hľadaná stránka neexistuje", 404);

@@ -60,6 +60,37 @@ export const api = createApi({
         method: 'GET'
       }),
       providesTags: ['Users']
+    }),
+    getAllExternalSchools: builder.mutation({
+      query: (data) => ({
+        url: '/externalSchool',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['ExternalSchools']
+    }),
+    createExternalSchool: builder.mutation({
+      query: (data) => ({
+        url: '/externalSchool',
+        method: 'POST',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['ExternalSchools'] : [])
+    }),
+    editExternalSchool: builder.mutation({
+      query: (data) => ({
+        url: `/externalSchool/${data.Id}`,
+        method: 'PUT',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['ExternalSchools'] : [])
+    }),
+    deleteExternalSchool: builder.mutation({
+      query: (data) => ({
+        url: `/externalSchool/${data.Id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['ExternalSchools']
     })
   })
 });
@@ -71,5 +102,7 @@ export const {
   useGetUsersListQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
-  useRemoveUserMutation
+  useRemoveUserMutation,
+  useGetAllExternalSchoolsQuery,
+  useCreateExternalSchoolMutation
 } = api;
