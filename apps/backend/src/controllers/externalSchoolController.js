@@ -14,8 +14,11 @@ exports.get = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-    const records = await ExternalSchool.find({ ids: req.ExternalSchool._id });
-    res.status(200).send(records);
+    const record = await ExternalSchool.findById(req.params.id);
+    if (!record) {
+      return res.status(404).send({ message: req.t("messages.record_not_exists") });
+    }
+    res.status(200).send(record);
   } catch (err) {
     throwError(err.message, 500);
   }
