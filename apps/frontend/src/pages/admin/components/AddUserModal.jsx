@@ -1,5 +1,4 @@
-import ErrorNotifier from '@app/components/ErrorNotifier';
-import { useCreateUserMutation } from '@app/redux/api';
+import { useCreateUserMutation, useGetAllExternalSchoolsQuery } from '@app/redux/api';
 import { joiResolver } from '@hookform/resolvers/joi';
 import {
   Button,
@@ -16,30 +15,60 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { createUserSchema } from '../schemas/createUser.schema';
 
 const AddUserModal = () => {
   const [open, setOpen] = useState(false);
+  const { data: externalSchools = [], isLoading: isLoadingSchools } =
+    useGetAllExternalSchoolsQuery();
   const [createUser, { isLoading }] = useCreateUserMutation();
 
   const {
     control,
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm({
     mode: 'onBlur',
-    resolver: joiResolver(createUserSchema)
+    resolver: joiResolver(createUserSchema),
+    defaultValues: { role: '' }
   });
+
+  const selectedRole = watch('role');
+
+  // Handle dynamic validation for externalSchool when role is 'Externý učiteľ'
+  useEffect(() => {
+    if (selectedRole === 'Externý učiteľ') {
+      setValue('externalSchool', null); // Reset externalSchool when role changes
+    }
+  }, [selectedRole, setValue]);
 
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const onSubmit = async (data) => {
-    const response = await createUser(data);
+    console.log(data);
+
+    // Validation for externalSchool based on role
+    if (data.role === 'Externý učiteľ' && !data.externalSchool) {
+      toast.error('Prosím, vyberte externú školu');
+      return;
+    }
+
+    // Ensure externalSchool is sent as a Mongoose ObjectId if valid
+    const payload = {
+      ...data,
+      ...(data.externalSchool && { externalSchool: data.externalSchool }) // Only include if it's valid
+    };
+
+    // Send the request
+    const response = await createUser(payload);
+
     if (!response.error) {
       toast.success('Užívateľ bol úspešne pridaný');
       handleClose();
@@ -66,8 +95,6 @@ const AddUserModal = () => {
             minWidth: { md: '30rem' }
           }}
         >
-          {/* <DialogTitle>Pridaj používateľa</DialogTitle> */}
-
           <TextField
             label="Name"
             variant="outlined"
@@ -101,7 +128,7 @@ const AddUserModal = () => {
             <Controller
               name="role"
               control={control}
-              defaultValue="Externý učiteľ"
+              defaultValue=""
               rules={{ required: 'Role is required' }}
               render={({ field }) => (
                 <Select {...field} fullWidth>
@@ -113,6 +140,30 @@ const AddUserModal = () => {
             />
             {errors.role && <FormHelperText>{errors.role.message}</FormHelperText>}
           </FormControl>
+
+          {/* External School Dropdown (Only if role is 'Externý učiteľ') */}
+          {selectedRole === 'Externý učiteľ' && (
+            <FormControl fullWidth error={!!errors.externalSchool}>
+              <InputLabel>Externá škola</InputLabel>
+              <Controller
+                name="externalSchool"
+                control={control}
+                rules={{ required: 'Externá škola je povinná' }}
+                render={({ field }) => (
+                  <Select {...field} fullWidth disabled={isLoadingSchools}>
+                    {externalSchools.map((school) => (
+                      <MenuItem key={school._id} value={school._id}>
+                        {school.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              {errors.externalSchool && (
+                <FormHelperText>{errors.externalSchool.message}</FormHelperText>
+              )}
+            </FormControl>
+          )}
 
           <TextField
             label="Password"
@@ -136,8 +187,6 @@ const AddUserModal = () => {
 
           <FormControlLabel control={<Checkbox {...register('isAdmin')} />} label="Is Admin" />
           {errors.isAdmin && <Typography color="error">{errors.isAdmin.message}</Typography>}
-
-          <ErrorNotifier />
 
           <DialogActions>
             <Button onClick={handleClose} color="error" variant="outlined">

@@ -69,6 +69,14 @@ export const api = createApi({
       }),
       providesTags: ['ExternalSchools']
     }),
+    getExternalSchoolById: builder.query({
+      query: (Id, ...data) => ({
+        url: `/externalSchool/${Id}`,
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['ExternalSchools']
+    }),
     createExternalSchool: builder.mutation({
       query: (data) => ({
         url: '/externalSchool',
@@ -104,6 +112,7 @@ export const {
   useUpdateUserMutation,
   useRemoveUserMutation,
   useGetAllExternalSchoolsQuery,
+  useGetExternalSchoolByIdQuery,
   useCreateExternalSchoolMutation,
   useEditExternalSchoolMutation,
   useDeleteExternalSchoolMutation

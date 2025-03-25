@@ -18,6 +18,13 @@ const createUserShema = Joi.object({
   role: Joi.string().required().messages({
     "string.empty": "Role is required",
   }),
+  externalSchool: Joi.string().when('role', {
+    is: 'Externý učiteľ',
+    then: Joi.required().messages({
+      'string.empty': 'Externá škola is required when role is Externý učiteľ'
+    }),
+    otherwise: Joi.optional()
+  }),
   isAdmin: Joi.boolean().required().messages({
     "boolean.base": "isAdmin must be a boolean value",
   }),
@@ -55,6 +62,13 @@ const updateUserSchema = Joi.object({
     }),
   role: Joi.string().required().messages({
     "string.empty": "Role is required",
+  }),
+  externalSchool: Joi.string().when('role', {
+    is: 'Externý učiteľ',
+    then: Joi.required().messages({
+      'string.empty': 'Externá škola is required when role is Externý učiteľ'
+    }),
+    otherwise: Joi.optional()
   }),
   isAdmin: Joi.boolean().required().messages({
     "boolean.base": "isAdmin must be a boolean value",

@@ -14,7 +14,7 @@ exports.get = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-    const records = await ExternalSchool.find({ ids: req.user.user_id });
+    const records = await ExternalSchool.find({ ids: req.ExternalSchool._id });
     res.status(200).send(records);
   } catch (err) {
     throwError(err.message, 500);

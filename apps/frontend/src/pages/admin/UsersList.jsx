@@ -26,6 +26,7 @@ const UsersList = () => {
     { field: 'surname', headerName: 'Priezvisko', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
     { field: 'role', headerName: 'Role', flex: 1 },
+    { field: 'externalSchool', headerName: 'Externá škola', flex: 1 },
     {
       field: 'isAdmin',
       headerName: 'Admin ucet',

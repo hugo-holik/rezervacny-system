@@ -12,7 +12,8 @@ const UserSchema = new mongoose.Schema(
     name: { type: String },
     surname: { type: String },
     role: { type: String },
-    externalSchool: { type: mongoose.Schema.Types.ObjectId, ref: "ExternalSchool" },
+    externalSchool: { type: mongoose.Schema.Types.ObjectId, ref: 'ExternalSchool', required: function () { return this.role === 'Externý učiteľ'; } }, // Conditionally required
+
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
