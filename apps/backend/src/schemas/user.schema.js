@@ -15,6 +15,9 @@ const createUserShema = Joi.object({
     "string.empty": "Email is required",
     "string.email": "Email must be a valid email address",
   }),
+  role: Joi.string().required().messages({
+    "string.empty": "Role is required",
+  }),
   isAdmin: Joi.boolean().required().messages({
     "boolean.base": "isAdmin must be a boolean value",
   }),
@@ -50,6 +53,9 @@ const updateUserSchema = Joi.object({
       "string.empty": "Email is required",
       "string.email": "Email must be a valid email address",
     }),
+  role: Joi.string().required().messages({
+    "string.empty": "Role is required",
+  }),
   isAdmin: Joi.boolean().required().messages({
     "boolean.base": "isAdmin must be a boolean value",
   }),

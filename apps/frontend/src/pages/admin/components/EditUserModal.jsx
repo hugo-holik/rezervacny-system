@@ -1,10 +1,7 @@
-import React from 'react';
-
-import { useUpdateUserMutation } from '@app/redux/api';
-import EditIcon from '@mui/icons-material/Edit';
-
 import ErrorNotifier from '@app/components/ErrorNotifier';
+import { useUpdateUserMutation } from '@app/redux/api';
 import { joiResolver } from '@hookform/resolvers/joi';
+import EditIcon from '@mui/icons-material/Edit';
 import {
   Button,
   Checkbox,
@@ -14,11 +11,14 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
+  MenuItem,
+  Select,
   TextField,
   Tooltip,
   Typography
 } from '@mui/material';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { updateUserSchema } from '../schemas/createUser.schema';
@@ -40,6 +40,7 @@ const EditUserModal = ({ userData }) => {
       name: userData.name || '',
       surname: userData.surname || '',
       email: userData.email || '',
+      role: userData.role || 'Zamestnanec', // Set default role
       isAdmin: userData.isAdmin || false,
       isActive: userData.isActive || false
     }
@@ -47,6 +48,7 @@ const EditUserModal = ({ userData }) => {
 
   const handleClickOpen = () => {
     setValue('name', userData.name);
+    setValue('role', userData.role || 'Zamestnanec'); // Set role on open
     setOpen(true);
   };
 
@@ -57,36 +59,30 @@ const EditUserModal = ({ userData }) => {
   const onSubmit = async (data) => {
     const response = await updateUser({ data, userId: userData._id });
     if (!response.error) {
-      toast.success('Uzivatel bol uspesne aktualizovany');
+      toast.success('Užívateľ bol úspešne aktualizovaný');
       handleClose();
     }
   };
 
   return (
     <>
-      <Tooltip title="Uprav používateľa" key={'edit'}>
+      <Tooltip title="Uprav používateľa">
         <IconButton onClick={handleClickOpen}>
           <EditIcon />
         </IconButton>
       </Tooltip>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        component={'form'}
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      <Dialog open={open} onClose={handleClose} component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent
           sx={{
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
             mx: 'auto',
-            minWidth: {
-              md: '30rem'
-            }
+            minWidth: { md: '30rem' }
           }}
         >
           <DialogTitle>Uprav používateľa</DialogTitle>
+
           <TextField
             label="Name"
             variant="outlined"
@@ -114,13 +110,29 @@ const EditUserModal = ({ userData }) => {
             fullWidth
           />
 
+          {/* Role Dropdown */}
+          <Controller
+            name="role"
+            control={control}
+            defaultValue="Externý učiteľ"
+            rules={{ required: 'Role is required' }}
+            render={({ field }) => (
+              <Select {...field} fullWidth>
+                <MenuItem value={'Externý učiteľ'}>Externý učiteľ</MenuItem>
+                <MenuItem value={'Zamestnanec UNIZA'}>Zamestnanec UNIZA</MenuItem>
+                <MenuItem value={'Správca cvičení'}>Správca cvičení</MenuItem>
+              </Select>
+            )}
+          />
+          {errors.role && <Typography color="error">{errors.role.message}</Typography>}
+
           <Controller
             name="isAdmin"
-            control={control} // This comes from `useForm`
-            defaultValue={false} // Default value for the checkbox
+            control={control}
+            defaultValue={false}
             render={({ field }) => (
               <FormControlLabel
-                control={<Checkbox {...field} checked={field.value} />} // Connect field and handle `checked`
+                control={<Checkbox {...field} checked={field.value} />}
                 label="Is Admin"
               />
             )}
@@ -129,16 +141,17 @@ const EditUserModal = ({ userData }) => {
 
           <Controller
             name="isActive"
-            control={control} // This comes from `useForm`
-            defaultValue={false} // Default value for the checkbox
+            control={control}
+            defaultValue={false}
             render={({ field }) => (
               <FormControlLabel
-                control={<Checkbox {...field} checked={field.value} />} // Connect field and handle `checked`
-                label="Ucet aktivny"
+                control={<Checkbox {...field} checked={field.value} />}
+                label="Účet aktívny"
               />
             )}
           />
           {errors.isActive && <Typography color="error">{errors.isActive.message}</Typography>}
+
           <ErrorNotifier />
 
           <DialogActions>
@@ -156,7 +169,7 @@ const EditUserModal = ({ userData }) => {
 };
 
 EditUserModal.propTypes = {
-  userData: PropTypes.object.isRequired // Specify that `value` is a required string
+  userData: PropTypes.object.isRequired
 };
 
 export default EditUserModal;

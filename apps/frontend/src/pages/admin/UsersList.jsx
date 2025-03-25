@@ -25,6 +25,7 @@ const UsersList = () => {
     { field: 'name', headerName: 'Meno', flex: 1, minWidth: 150 },
     { field: 'surname', headerName: 'Priezvisko', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
+    { field: 'role', headerName: 'Role', flex: 1 },
     {
       field: 'isAdmin',
       headerName: 'Admin ucet',

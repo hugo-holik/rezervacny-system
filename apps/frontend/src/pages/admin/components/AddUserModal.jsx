@@ -1,5 +1,3 @@
-import React from 'react';
-
 import ErrorNotifier from '@app/components/ErrorNotifier';
 import { useCreateUserMutation } from '@app/redux/api';
 import { joiResolver } from '@hookform/resolvers/joi';
@@ -9,48 +7,41 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
+  FormControl,
   FormControlLabel,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography
 } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { createUserSchema } from '../schemas/createUser.schema';
 
 const AddUserModal = () => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const [createUser, { isLoading }] = useCreateUserMutation();
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors }
   } = useForm({
     mode: 'onBlur',
     resolver: joiResolver(createUserSchema)
-    // defaultValues: {
-    //   name: 'John Doe',
-    //   surname: 'asa',
-    //   email: 'aa@aa.aa',
-    //   password: 'heslo1234',
-    //   passwordConfirmation: 'heslo1234',
-    //   isAdmin: false
-    // }
   });
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const handleClickOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   const onSubmit = async (data) => {
     const response = await createUser(data);
     if (!response.error) {
-      toast.success('Uzivatel bol uspesne pridany');
+      toast.success('Užívateľ bol úspešne pridaný');
       handleClose();
     }
   };
@@ -65,24 +56,18 @@ const AddUserModal = () => {
       >
         Pridaj používateľa
       </Button>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        component={'form'}
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      <Dialog open={open} onClose={handleClose} component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent
           sx={{
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
             mx: 'auto',
-            minWidth: {
-              md: '30rem'
-            }
+            minWidth: { md: '30rem' }
           }}
         >
-          <DialogTitle>Pridaj používateľa</DialogTitle>
+          {/* <DialogTitle>Pridaj používateľa</DialogTitle> */}
+
           <TextField
             label="Name"
             variant="outlined"
@@ -110,6 +95,25 @@ const AddUserModal = () => {
             fullWidth
           />
 
+          {/* Select Field for Role */}
+          <FormControl fullWidth error={!!errors.role}>
+            <InputLabel>Rola</InputLabel>
+            <Controller
+              name="role"
+              control={control}
+              defaultValue="Externý učiteľ"
+              rules={{ required: 'Role is required' }}
+              render={({ field }) => (
+                <Select {...field} fullWidth>
+                  <MenuItem value={'Externý učiteľ'}>Externý učiteľ</MenuItem>
+                  <MenuItem value={'Zamestnanec UNIZA'}>Zamestnanec UNIZA</MenuItem>
+                  <MenuItem value={'Správca cvičení'}>Správca cvičení</MenuItem>
+                </Select>
+              )}
+            />
+            {errors.role && <FormHelperText>{errors.role.message}</FormHelperText>}
+          </FormControl>
+
           <TextField
             label="Password"
             type="password"
@@ -129,8 +133,10 @@ const AddUserModal = () => {
             helperText={errors.passwordConfirmation?.message}
             fullWidth
           />
+
           <FormControlLabel control={<Checkbox {...register('isAdmin')} />} label="Is Admin" />
           {errors.isAdmin && <Typography color="error">{errors.isAdmin.message}</Typography>}
+
           <ErrorNotifier />
 
           <DialogActions>

@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: false },
     name: { type: String },
     surname: { type: String },
+    role: { type: String },
+    externalSchool: { type: mongoose.Schema.Types.ObjectId, ref: "ExternalSchool" },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
