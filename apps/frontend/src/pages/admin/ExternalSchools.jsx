@@ -5,6 +5,7 @@ import { Box, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/materia
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { toast } from 'react-toastify';
 import AddExternalSchoolModal from './components/AddExternalSchoolModal';
+import EditExternalSchoolModal from './components/EditExternalSchoolModal';
 const ExternalSchools = () => {
   const { data, isLoading } = useGetAllExternalSchoolsQuery();
   const [deleteExternalSchool] = useDeleteExternalSchoolMutation();
@@ -36,6 +37,7 @@ const ExternalSchools = () => {
       headerName: 'Akcie',
       getActions: (params) => {
         return [
+          <EditExternalSchoolModal key={'edit'} externalSchoolData={params.row} />,
           <ConfirmationDialog
             key={'delete'}
             title={`Naozaj chcete odstrániť externú školu ${params.row.name} ${params.row.address} ?`}

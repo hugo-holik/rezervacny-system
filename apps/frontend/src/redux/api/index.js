@@ -78,10 +78,10 @@ export const api = createApi({
       invalidatesTags: (result) => (result ? ['ExternalSchools'] : [])
     }),
     editExternalSchool: builder.mutation({
-      query: (data) => ({
-        url: `/externalSchool/${data.Id}`,
+      query: ({ Id, ...data }) => ({
+        url: `/externalSchool/${Id}`,
         method: 'PUT',
-        body: data
+        body: data // Send only updated fields
       }),
       invalidatesTags: (result) => (result ? ['ExternalSchools'] : [])
     }),
