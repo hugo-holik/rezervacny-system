@@ -50,10 +50,10 @@ const UsersList = () => {
           <EditUserModal key={'edit'} userData={params.row} />,
           <ConfirmationDialog
             key={'delete'}
-            title={`Naozaj chcete odstranit pouzivatela ${params.row.name} ${params.row.surname} ?`}
+            title={`Naozaj chcete odstrániť používateľa ${params.row.name} ${params.row.surname} ?`}
             onAccept={() => onRemoveHandler(params.row._id)}
           >
-            <Tooltip title="Odstran pouzivatela">
+            <Tooltip title="Odstráň používateľa">
               <IconButton>
                 <DeleteIcon />
               </IconButton>
