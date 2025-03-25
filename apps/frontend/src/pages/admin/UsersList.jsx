@@ -1,12 +1,36 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import CenteredCheckIcon from '@app/components/table/CenteredCheckIcon';
-import { useGetUsersListQuery, useRemoveUserMutation } from '@app/redux/api';
+import {
+  useGetExternalSchoolByIdQuery,
+  useGetUsersListQuery,
+  useRemoveUserMutation
+} from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import AddUserModal from './components/AddUserModal';
 import EditUserModal from './components/EditUserModal';
+
+const ExternalSchoolCell = ({ schoolId }) => {
+  const { data: school, isLoading } = useGetExternalSchoolByIdQuery(schoolId, {
+    skip: !schoolId // Skip query if no schoolId
+  });
+
+  if (isLoading) return <Typography variant="body2">Načítava sa...</Typography>;
+  if (!school) return <Typography variant="body2">Neznáme</Typography>;
+
+  return (
+    <Typography variant="body2">
+      {school.name} - {school.address}
+    </Typography>
+  );
+};
+
+ExternalSchoolCell.propTypes = {
+  schoolId: PropTypes.string
+};
 
 const UsersList = () => {
   const { data, isLoading } = useGetUsersListQuery();
@@ -26,22 +50,23 @@ const UsersList = () => {
     { field: 'surname', headerName: 'Priezvisko', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
     { field: 'role', headerName: 'Role', flex: 1 },
-    { field: 'externalSchool', headerName: 'Externá škola', flex: 1 },
+    {
+      field: 'externalSchool',
+      headerName: 'Externá škola',
+      flex: 1,
+      renderCell: (params) => <ExternalSchoolCell schoolId={params.value} />
+    },
     {
       field: 'isAdmin',
-      headerName: 'Admin ucet',
+      headerName: 'Admin účet',
       flex: 1,
-      renderCell: (value) => {
-        return value.row.isAdmin ? <CenteredCheckIcon /> : null;
-      }
+      renderCell: (params) => (params.row.isAdmin ? <CenteredCheckIcon /> : null)
     },
     {
       field: 'isActive',
-      headerName: 'Ucet aktivny',
+      headerName: 'Účet aktívny',
       flex: 1,
-      renderCell: (value) => {
-        return value.row.isActive ? <CenteredCheckIcon /> : null;
-      }
+      renderCell: (params) => (params.row.isActive ? <CenteredCheckIcon /> : null)
     },
     {
       field: 'actions',
@@ -67,7 +92,6 @@ const UsersList = () => {
   ];
 
   const handleRowClick = (params) => {
-    //NOTE ak chceme na dvojklik nejaku aktivitu
     console.log(params);
   };
 

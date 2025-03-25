@@ -70,10 +70,9 @@ export const api = createApi({
       providesTags: ['ExternalSchools']
     }),
     getExternalSchoolById: builder.query({
-      query: (Id, ...data) => ({
+      query: (Id) => ({
         url: `/externalSchool/${Id}`,
         method: 'GET',
-        body: data
       }),
       providesTags: ['ExternalSchools']
     }),
