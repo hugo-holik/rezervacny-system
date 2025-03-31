@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import MinimalLayout from './components/layout/MinimalLayout';
 import Protected from './components/layout/Protected';
 import { RouteNotFound } from './components/RouteNotFound.component';
-import Exercises from './pages/admin/Exercises';
+import Info from './pages/admin/Info';
 import authRoutes from './pages/auth';
 import Dashboard from './pages/dashboard/Dashboard';
 
@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Exercises /> // Default route to Exercises page
+        element: <Info /> // Default route to Exercises page
       },
       {
         path: '/dashboard',

@@ -14,7 +14,9 @@ const Info = () => {
         <Typography variant="body1" paragraph>
           Vitajte v projekte! Táto aplikácia slúži na správu používateľov a poskytuje používateľsky
           prívetivé rozhranie pre administrátorov na správu účtov, zobrazenie informácií a bezpečné
-          aktualizovanie údajov používateľov.
+          aktualizovanie údajov používateľov. Okrem toho aplikácia umožňuje efektívnu správu
+          externých škôl, udalostí, cvičení a prihlášok, ako aj sledovanie histórie prihlásení a
+          schválení.
         </Typography>
 
         <Typography variant="h6" gutterBottom>
@@ -27,19 +29,63 @@ const Info = () => {
                 Správa používateľov
               </Typography>
               <Typography variant="body2">
-                Umožňuje administrátorom aktualizovať informácie o používateľoch ako meno, email,
-                rola a heslo.
+                Umožňuje administrátorom spravovať informácie o používateľoch, ako sú meno, email,
+                rola a heslo. Pomáha udržiavať aktualizované účty používateľov v systéme.
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="subtitle1" gutterBottom>
-                Autentifikácia
+                Správa externých škôl
               </Typography>
               <Typography variant="body2">
-                Používatelia sa môžu prihlásiť, odhlásiť a obnoviť svoje heslá. Bezpečná
-                autentifikácia je zabezpečená pomocou JWT tokenov.
+                Spravuje externé školy, ktoré sú priradené externým učiteľom. Umožňuje
+                administrátorom priraďovať školy k externým učiteľom a spravovať tieto informácie.
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Správa udalostí
+              </Typography>
+              <Typography variant="body2">
+                Umožňuje administrátorom vytvárať a spravovať udalosti, ako sú špeciálne cvičenia, s
+                definovaním termínov a prístupovými právami pre prihlásenie účastníkov.
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Správa cvičení
+              </Typography>
+              <Typography variant="body2">
+                Spravuje špecifické cvičenia, ktoré sú priradené zamestnancom a externým učiteľom.
+                Umožňuje nastavenie času, kapacity a popisu cvičení.
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Správa prihlášok
+              </Typography>
+              <Typography variant="body2">
+                Umožňuje spravovať prihlášky používateľov na cvičenia, sledovať stav schválenia a
+                schvaľovať prihlášky externých učiteľov na cvičenia.
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                História prihlásení
+              </Typography>
+              <Typography variant="body2">
+                Umožňuje administrátorom a učiteľom sledovať históriu prihlásení na cvičenia, ako aj
+                schválenie prihlášok a ďalšie záznamy o aktivitách používateľov.
               </Typography>
             </Paper>
           </Grid>
@@ -67,7 +113,8 @@ const Info = () => {
         </Typography>
         <ol>
           <li>
-            Skopírujte repozitár: <code>git clone https://github.com/your-repository-url</code>
+            Skopírujte repozitár:{' '}
+            <code>git clone https://github.com/hugo-holik/rezervacny-system</code>
           </li>
           <li>
             Nainštalujte závislosti: <code>npm install</code>
@@ -77,6 +124,20 @@ const Info = () => {
             Spustite vývojový server: <code>npm run dev</code>
           </li>
         </ol>
+
+        <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+          Rezervačný systém FEIT
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Tento systém nahradí existujúce rozšírenie do WordPressu pre správu špeciálnych cvičení.
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Všeobecná funkcionalita systému:
+        </Typography>
+        <ul>
+          <li>Zamestnanci školy – spravovanie špeciálnych cvičení</li>
+          <li>Externí učitelia – prihlasovanie sa na povolené cvičenia</li>
+        </ul>
       </Card>
     </Container>
   );
