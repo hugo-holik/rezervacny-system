@@ -98,6 +98,38 @@ export const api = createApi({
         method: 'DELETE'
       }),
       invalidatesTags: ['ExternalSchools']
+    }),
+
+    getAllExercises: builder.query({
+      query: (data) => ({
+        url: '/exercise',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Exercises']
+    }),
+    createExercise: builder.mutation({
+      query: (data) => ({
+        url: '/exercise',
+        method: 'POST',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['Exercises'] : [])
+    }),
+    editExercise: builder.mutation({
+      query: ({ Id, ...data }) => ({
+        url: `/exercise/${Id}`,
+        method: 'PUT',
+        body: data // Send only updated fields
+      }),
+      invalidatesTags: (result) => (result ? ['Exercise'] : [])
+    }),
+    deleteExercise: builder.mutation({
+      query: (id) => ({
+        url: `/exercise/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Exercise']
     })
   })
 });
@@ -114,5 +146,9 @@ export const {
   useGetExternalSchoolByIdQuery,
   useCreateExternalSchoolMutation,
   useEditExternalSchoolMutation,
-  useDeleteExternalSchoolMutation
+  useDeleteExternalSchoolMutation,
+  useGetExerciseSchoolsQuery,
+  useCreateExerciseMutation,
+  useEditExerciseMutation,
+  useDeleteExerciseMutation,
 } = api;
