@@ -1,31 +1,17 @@
 const { throwError, errorFormatter } = require("../util/universal");
-const { body, validationResult, matchedData } = require("express-validator");
-
+const { createExerciseSchema, updateExerciseSchema } = require("../schemas/exercise.schema");
+const { matchedData } = require('express-validator');
 const Exercise = require("../models/exercise");
 //const Event = require("../models/events");
 
 // CREATE EXERCISE ========================================================
-exports.create = [
-  body("name").not().isEmpty().withMessage("validation.empty_name"),
-  body("program").not().isEmpty().withMessage("validation.empty_program"),
-  body("description")
-    .not()
-    .isEmpty()
-    .withMessage("validation.empty_description"),
-  body("leads").isArray({ min: 1 }).withMessage("validation.empty_lead"),
-  body("room").not().isEmpty().withMessage("validation.empty_room"),
-  body("duration").not().isEmpty().withMessage("validation.empty_duration"),
-  body("startTimes")
-    .isArray({ min: 1 })
-    .withMessage("validation.empty_startTimes"),
-  body("maxAttendees").not().isEmpty().withMessage("validation.maxAttendees"),
-  body("color").optional(),
-
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+exports.create = async (req, res) => {
+  try {
+    // Validate the incoming data
+    const { error } = createExerciseSchema.validate(req.body);
+    if (error) {
       return res.status(400).json({
-        errors: errors.array(),
+        errors: error.details.map((detail) => detail.message),
       });
     }
 
@@ -64,8 +50,10 @@ exports.create = [
     } catch (err) {
       return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
     }
-  },
-];
+  } catch (err) {
+    return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
+  }
+};
 
 // GET ALL EXERCISES  ====================================================
 exports.getAll = async (req, res) => {
@@ -78,23 +66,21 @@ exports.getAll = async (req, res) => {
 };
 
 // EDIT EXERCISE ==========================================================
-exports.edit = [
-  body("name").optional(),
-  body("program").optional(),
-  body("description").optional(),
-  body("room").optional(),
-  body("leads").optional(),
-  body("duration").optional(),
-  body("startTimes").optional(),
-  body("maxAttendees").optional(),
-  body("color").optional(),
+exports.edit = async (req, res) => {
+  try {
+    // Validate the incoming data
+    const { error } = updateExerciseSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        errors: error.details.map((detail) => detail.message),
+      });
+    }
 
-  async (req, res) => {
     const matched = matchedData(req, {
       includeOptional: true,
       onlyValidData: true,
     });
-
+    console.log("Matched Data:", matched); // Log the matched data
     const record = await Exercise.findOne({ _id: req.params.id });
     if (!record) {
       return res.status(404).send();
@@ -112,8 +98,10 @@ exports.edit = [
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
-  },
-];
+  } catch (err) {
+    return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
+  }
+};
 
 // DELETE EXERCISE  =======================================================
 exports.remove = async (req, res) => {
@@ -136,4 +124,3 @@ exports.remove = async (req, res) => {
     throwError(req.t("messages.record_not_exists"), 404);
   }
 };
-

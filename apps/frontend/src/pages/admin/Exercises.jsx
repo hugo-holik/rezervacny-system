@@ -32,8 +32,8 @@ const Exercises = () => {
   };
 
   const handleRowClick = (params) => {
-    setSelectedExercise(params.row); // Set the selected exercise for editing
-    setOpenEditModal(true); // Open the Edit Modal
+    setSelectedExercise(params.row);
+    setOpenEditModal(true);
   };
 
   const columns = [

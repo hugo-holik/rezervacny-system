@@ -44,7 +44,7 @@ const MainLayout = ({ children }) => {
   const user = authService.getUserFromStorage();
 
   if (!user) {
-    navigate('/auth/login');
+    navigate('/auth/login'); // Redirect if no user
   }
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -87,7 +87,7 @@ const MainLayout = ({ children }) => {
   if (user?.isAdmin) {
     drawerOption.push(
       { title: 'Správca', type: 'header' },
-      { title: 'Panel správcu', navTo: '/', icon: <AdminPanelSettingsIcon /> },
+      { title: 'Panel správcu', navTo: '/dashboard', icon: <AdminPanelSettingsIcon /> },
       { title: 'Domov', type: 'header' },
       { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Navigácia', type: 'header' },
