@@ -55,31 +55,37 @@ exports.edit = [
   validate(updateUserSchema),
   async (req, res) => {
     const data = validated(req);
-
     const user = await User.findOne({ _id: req.params.id });
+
     if (!user) {
       return res.status(404).send();
     }
+
     if (data.email) {
       const userByEmail = await User.findOne({
         email: data.email,
-        _id: { $ne: req.params.id },
+        _id: { $ne: req.params.id }
       });
-      if (userByEmail) {
-        if (userByEmail._id.toString() !== user._id.toString()) {
-          throwError(req.t("validation.email_already_exist"), 400);
-        }
+      if (userByEmail && userByEmail._id.toString() !== user._id.toString()) {
+        throwError(req.t('validation.email_already_exist'), 400);
       }
     }
 
     try {
+      // If updating password, hash it before saving
+      if (data.password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(data.password, salt);
+      }
+
       Object.assign(user, data);
       await user.save();
+
       return res.status(200).send({});
     } catch (error) {
-      throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
+      throwError(`${req.t('messages.database_error')}: ${error.message}`, 500);
     }
-  },
+  }
 ];
 
 exports.remove = async (req, res) => {

@@ -89,7 +89,7 @@ const MainLayout = ({ children }) => {
       { title: 'Správca', type: 'header' },
       { title: 'Panel správcu', navTo: '/', icon: <AdminPanelSettingsIcon /> },
       { title: 'Domov', type: 'header' },
-      { title: 'Môj účet', navTo: '/account', icon: <AccountCircleIcon /> },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Navigácia', type: 'header' },
       { title: 'Používatelia', navTo: '/admin/users', icon: <GroupIcon /> },
       { title: 'Externé školy', navTo: '/admin/external-schools', icon: <CorporateFareIcon /> }
@@ -108,7 +108,7 @@ const MainLayout = ({ children }) => {
   if (!user?.isAdmin) {
     drawerOption.push(
       { title: 'Domov', type: 'header' },
-      { title: 'Môj účet', navTo: '/account', icon: <AccountCircleIcon /> },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Navigácia', type: 'header' }
     );
     drawerOption.push(...commonOptions);

@@ -5,9 +5,14 @@ import Exercises from './Exercises';
 import ExternalSchools from './ExternalSchools';
 import History from './History';
 import Info from './Info';
+import MyAccount from './MyAccount';
 import UsersList from './UsersList';
 
 const routes = [
+  {
+    path: 'account',
+    element: <MyAccount />
+  },
   {
     path: 'users',
     element: <UsersList />

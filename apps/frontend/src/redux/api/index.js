@@ -147,7 +147,7 @@ export const {
   useCreateExternalSchoolMutation,
   useEditExternalSchoolMutation,
   useDeleteExternalSchoolMutation,
-  useGetExerciseSchoolsQuery,
+  useGetAllExercisesQuery,
   useCreateExerciseMutation,
   useEditExerciseMutation,
   useDeleteExerciseMutation,
