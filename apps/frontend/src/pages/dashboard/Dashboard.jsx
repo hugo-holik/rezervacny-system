@@ -5,6 +5,9 @@ import {
 } from '@app/redux/api';
 import { Box, CircularProgress, Container, Grid, Paper, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import Exercises from '../admin/Exercises'; // Import UsersList component
+import ExternalSchools from '../admin/ExternalSchools'; // Import ExternalSchools component
+import UsersList from '../admin/UsersList'; // Import UsersList component
 
 const Dashboard = () => {
   const { data: usersData, isLoading: usersLoading } = useGetUsersListQuery();
@@ -36,11 +39,12 @@ const Dashboard = () => {
   ]);
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5 }}>
+    <Container maxWidth="xl" sx={{ mt: 5 }}>
       <Typography variant="h3" align="center" gutterBottom>
         Prehľad štatistík
       </Typography>
 
+      {/* Statistics Section */}
       <Grid container spacing={4} justifyContent="center">
         <Grid item xs={12} sm={4}>
           <Paper sx={{ p: 3, textAlign: 'center' }}>
@@ -82,11 +86,19 @@ const Dashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Add more info below if needed */}
+      {/* Users List Section */}
+      <Box sx={{ mt: 5 }}>
+        <UsersList /> {/* Users table component */}
+      </Box>
+
+      {/* External Schools Section */}
+      <Box sx={{ mt: 5 }}>
+        <ExternalSchools /> {/* External schools table component */}
+      </Box>
+
+      {/* Additional Information */}
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" align="center">
-          Viac informácií o projekte a jeho funkcionalitách nájdete na stránke Info.
-        </Typography>
+        <Exercises />
       </Box>
     </Container>
   );
