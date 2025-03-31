@@ -79,11 +79,12 @@ const Exercises = () => {
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
           <Button
+            sx={{ m: 1, minWidth: '15rem' }}
             variant="contained"
             color="primary"
             onClick={() => setOpenAddModal(true)} // Open Add Modal on button click
           >
-            Pridať cvičenie
+            Pridaj cvičenie
           </Button>
         </Grid2>
       </Grid2>
