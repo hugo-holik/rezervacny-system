@@ -22,11 +22,13 @@ exports.create = [
   body("color").optional(),
 
   async (req, res) => {
-    throwError(
-      req.t("messages.createExercise"),
-      400,
-      validationResult(req).formatWith(errorFormatter)
-    );
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array(),
+      });
+    }
+
     const {
       name,
       program,
@@ -41,7 +43,7 @@ exports.create = [
 
     const existingExercise = await Exercise.findOne({ name });
     if (existingExercise) {
-      throwError(req.t("validation.exercise_already_exist"), 400);
+      return res.status(400).json({ message: req.t("validation.exercise_already_exist") });
     }
 
     const newExercise = new Exercise({
@@ -58,10 +60,10 @@ exports.create = [
 
     try {
       await newExercise.save();
+      res.status(201).send({});
     } catch (err) {
-      throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+      return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
     }
-    res.status(201).send({});
   },
 ];
 

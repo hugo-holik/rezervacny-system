@@ -1,15 +1,21 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import { useDeleteExerciseMutation, useGetAllExercisesQuery } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+
+import { Box, Button, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
-// import AddExerciseModal from './components/AddExerciseModal';
-// import EditExerciseModal from './components/EditExerciseModal';
+import AddExerciseModal from './components/AddExerciseModal';
+import EditExerciseModal from './components/EditExerciseModal';
 
 const Exercises = () => {
   const { data, isLoading } = useGetAllExercisesQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
+  const [openAddModal, setOpenAddModal] = useState(false); // State to open Add Exercise Modal
+  const [openEditModal, setOpenEditModal] = useState(false); // State to open Edit Exercise Modal
+  const [selectedExercise, setSelectedExercise] = useState(null); // State to store selected exercise for editing
 
   const onRemoveHandler = async (id) => {
     if (!id) {
@@ -25,6 +31,11 @@ const Exercises = () => {
     }
   };
 
+  const handleRowClick = (params) => {
+    setSelectedExercise(params.row); // Set the selected exercise for editing
+    setOpenEditModal(true); // Open the Edit Modal
+  };
+
   const columns = [
     { field: 'name', headerName: 'Názov', flex: 1, minWidth: 150 },
     { field: 'program', headerName: 'Program', flex: 1 },
@@ -37,28 +48,26 @@ const Exercises = () => {
       field: 'actions',
       type: 'actions',
       headerName: 'Akcie',
-      getActions: (params) => {
-        return [
-          // <EditExerciseModal key={'edit'} exerciseData={params.row} />,
-          <ConfirmationDialog
-            key={'delete'}
-            title={`Naozaj chcete odstrániť cvičenie ${params.row.name}?`}
-            onAccept={() => onRemoveHandler(params.row._id)}
-          >
-            <Tooltip title="Odstráň cvičenie">
-              <IconButton>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </ConfirmationDialog>
-        ];
-      }
+      getActions: (params) => [
+        <Tooltip key="edit" title="Upravit cvičenie">
+          <IconButton onClick={() => handleRowClick(params)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>,
+        <ConfirmationDialog
+          key={'delete'}
+          title={`Naozaj chcete odstrániť cvičenie ${params.row.name}?`}
+          onAccept={() => onRemoveHandler(params.row._id)}
+        >
+          <Tooltip title="Odstráň cvičenie">
+            <IconButton>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </ConfirmationDialog>
+      ]
     }
   ];
-
-  const handleRowClick = (params) => {
-    console.log(params);
-  };
 
   return (
     <Box py={2}>
@@ -69,7 +78,13 @@ const Exercises = () => {
           </Typography>
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
-          {/* <AddExerciseModal /> */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenAddModal(true)} // Open Add Modal on button click
+          >
+            Pridať cvičenie
+          </Button>
         </Grid2>
       </Grid2>
       <Paper sx={{ mt: 2 }}>
@@ -97,11 +112,21 @@ const Exercises = () => {
             }
           }}
           ignoreDiacritics
-          onRowDoubleClick={(params) => {
-            handleRowClick(params);
-          }}
         />
       </Paper>
+
+      {/* Add Exercise Modal */}
+      <AddExerciseModal
+        open={openAddModal}
+        onClose={() => setOpenAddModal(false)} // Close Add Modal
+      />
+
+      {/* Edit Exercise Modal */}
+      <EditExerciseModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)} // Close Edit Modal
+        exerciseData={selectedExercise} // Pass selected exercise data to Edit Modal
+      />
     </Box>
   );
 };
