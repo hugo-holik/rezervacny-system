@@ -33,6 +33,7 @@ app.use("/user", require("./src/routes/user"));
 app.use("/admin", require("./src/routes/admin"));
 app.use("/externalSchool", require("./src/routes/externalSchool"));
 app.use("/exercise", require("./src/routes/exercise"));
+app.use("/event", require("./src/routes/event"));
 
 app.use(function (req, res, next) {
   throwError("Hľadaná stránka neexistuje", 404);

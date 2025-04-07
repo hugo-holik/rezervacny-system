@@ -4,7 +4,6 @@ const { matchedData } = require('express-validator');
 const Exercise = require("../models/exercise");
 //const Event = require("../models/events");
 
-// CREATE EXERCISE ========================================================
 exports.create = async (req, res) => {
   try {
     // Validate the incoming data
@@ -55,7 +54,6 @@ exports.create = async (req, res) => {
   }
 };
 
-// GET ALL EXERCISES  ====================================================
 exports.getAll = async (req, res) => {
   try {
     const records = await Exercise.find();
@@ -65,7 +63,6 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// EDIT EXERCISE ==========================================================
 exports.edit = async (req, res) => {
   try {
     // Validate the incoming data
@@ -103,7 +100,6 @@ exports.edit = async (req, res) => {
   }
 };
 
-// DELETE EXERCISE  =======================================================
 exports.remove = async (req, res) => {
   const exerciseId = req.params.id;
   const record = await Exercise.findOne({ _id: exerciseId });

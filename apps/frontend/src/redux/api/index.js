@@ -130,7 +130,71 @@ export const api = createApi({
         method: 'DELETE'
       }),
       invalidatesTags: ['Exercise']
-    })
+    }),
+
+    getAllEvents: builder.query({
+      query: (data) => ({
+        url: '/event',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
+    getEventById: builder.query({
+      query: ({ Id, ...data }) => ({
+        url: `/event/${Id}`,
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
+    createEvent: builder.mutation({
+      query: (data) => ({
+        url: '/event',
+        method: 'POST',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
+    editEvent: builder.mutation({
+      query: ({ Id, ...data }) => ({
+        url: `/event/${Id}`,
+        method: 'PUT',
+        body: data // Send only updated fields
+      }),
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
+    deleteEvent: builder.mutation({
+      query: (id) => ({
+        url: `/event/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Events']
+    }),
+
+    addEventExercise: builder.mutation({
+      query: ({Id, ...data}) => ({
+        url: `/event/addExercise/${Id}`,
+        method: 'POST',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
+    editEventExercise: builder.mutation({
+      query: ({ eventId, exerciseId, ...data }) => ({
+        url: `/event/editExercise/${eventId}/${exerciseId}`,
+        method: 'PUT',
+        body: data // Send only updated fields
+      }),
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
+    deleteEventExercise: builder.mutation({
+      query: (eventId, exerciseId) => ({
+        url: `/event/removeExercise/${eventId}/${exerciseId}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Events']
+    }),
   })
 });
 
@@ -151,4 +215,12 @@ export const {
   useCreateExerciseMutation,
   useEditExerciseMutation,
   useDeleteExerciseMutation,
+  useGetAllEventsQuery,
+  useGetEventByIdQuery,
+  useCreateEventMutation,
+  useEditEventMutation,
+  useDeleteEventMutation,
+  useAddEventExerciseMutation,
+  useEditEventExerciseMutation,
+  useDeleteEventExerciseMutation
 } = api;
