@@ -3,7 +3,7 @@ import { useDeleteExerciseMutation, useGetAllExercisesQuery } from '@app/redux/a
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Box, Button, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material'; // Change Grid2 to Grid
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -71,13 +71,15 @@ const Exercises = () => {
 
   return (
     <Box py={2}>
-      <Grid2 py={1} px={1} container spacing={1}>
-        <Grid2 size={{ xs: 12, sm: 9 }} display={'flex'}>
+      <Grid py={1} px={1} container spacing={1}>
+        {' '}
+        {/* Change Grid2 to Grid */}
+        <Grid item xs={12} sm={9} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
             Cvičenia
           </Typography>
-        </Grid2>
-        <Grid2 size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
+        </Grid>
+        <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
           <Button
             sx={{ m: 1, minWidth: '15rem' }}
             variant="contained"
@@ -86,8 +88,8 @@ const Exercises = () => {
           >
             Pridaj cvičenie
           </Button>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading}

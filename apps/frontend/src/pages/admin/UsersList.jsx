@@ -6,7 +6,7 @@ import {
   useRemoveUserMutation
 } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
@@ -97,16 +97,16 @@ const UsersList = () => {
 
   return (
     <Box py={2}>
-      <Grid2 py={1} px={1} container spacing={1}>
-        <Grid2 size={{ xs: 12, sm: 9 }} display={'flex'}>
+      <Grid py={1} px={1} container spacing={1}>
+        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
             Používatelia
           </Typography>
-        </Grid2>
-        <Grid2 size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
           <AddUserModal />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading}

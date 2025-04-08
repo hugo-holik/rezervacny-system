@@ -1,16 +1,16 @@
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'url';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
   },
   preview: {
     port: 5174,
-    strictPort: true
+    strictPort: true,
   },
   server: {
     port: 5174,
@@ -18,15 +18,13 @@ export default defineConfig({
     host: true,
     allowedHosts: ['frontend'],
     hmr: {
-      path: '/ws'
-    }
+      path: '/ws',
+    },
   },
   resolve: {
     alias: {
-      '@app': path.resolve(__dirname, './src'),
-      '@componentes': path.resolve(__dirname, './src/componentes')
-    }
-  }
+      '@app': fileURLToPath(new URL('./src', import.meta.url)),
+      '@componentes': fileURLToPath(new URL('./src/componentes', import.meta.url)),
+    },
+  },
 });
-//Firefox may have stricter security settings for WebSocket connections on localhost.
-//Check your about:config and set network.websocket.allowInsecureFromHTTPS to true.

@@ -2,7 +2,7 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import { useDeleteEventMutation, useGetAllEventsQuery } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, Button, Grid2, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -107,13 +107,13 @@ const Events = () => {
 
   return (
     <Box py={2}>
-      <Grid2 py={1} px={1} container spacing={1}>
-        <Grid2 size={{ xs: 12, sm: 9 }} display={'flex'}>
+      <Grid py={1} px={1} container spacing={1}>
+        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
             Udalosti
           </Typography>
-        </Grid2>
-        <Grid2 size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
           <Button
             sx={{ m: 1, minWidth: '15rem' }}
             variant="contained"
@@ -122,8 +122,8 @@ const Events = () => {
           >
             Pridaj udalosť
           </Button>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       <Paper sx={{ mt: 2 }}>
         <DataGrid
