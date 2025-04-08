@@ -105,11 +105,6 @@ exports.remove = async (req, res) => {
   const record = await Exercise.findOne({ _id: exerciseId });
   if (record) {
     try {
-      // await Event.updateMany(
-      //   { openExercises: { $elemMatch: { exercise: exerciseId } } },
-      //   { $pull: { openExercises: { exercise: exerciseId } } }
-      // );
-
       await Exercise.deleteOne({ _id: exerciseId });
 
       res.status(200).send({});
