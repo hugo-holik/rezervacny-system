@@ -72,22 +72,22 @@ const Exercises = () => {
   return (
     <Box py={2}>
       <Grid py={1} px={1} container spacing={1}>
-        {' '}
-        {/* Change Grid2 to Grid */}
-        <Grid item xs={12} sm={9} display={'flex'}>
+        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
-            Cvičenia
+            Externé školy
           </Typography>
         </Grid>
-        <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
-          <Button
-            sx={{ m: 1, minWidth: '15rem' }}
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenAddModal(true)} // Open Add Modal on button click
-          >
-            Pridaj cvičenie
-          </Button>
+        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
+          <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
+            <Button
+              sx={{ m: 1, minWidth: '15rem' }}
+              variant="contained"
+              color="primary"
+              onClick={() => setOpenAddModal(true)} // Open Add Modal on button click
+            >
+              Pridaj cvičenie
+            </Button>
+          </Grid>
         </Grid>
       </Grid>
       <Paper sx={{ mt: 2 }}>
