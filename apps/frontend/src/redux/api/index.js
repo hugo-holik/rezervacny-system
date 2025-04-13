@@ -195,6 +195,22 @@ export const api = createApi({
       }),
       invalidatesTags: ['Events']
     }),
+
+    updateAttendeeStatus: builder.mutation({
+      query: ({ eventId, exerciseId, attendeeId, status }) => ({
+        url: `/event/updateAttendeeStatus/${eventId}/${exerciseId}/${attendeeId}`,
+        method: 'PUT',
+        body: { status },
+      }),
+    }),
+    addExerciseToEvent: builder.mutation({
+      query: ({ eventId, newExercise }) => ({
+        url: `/event/addExercise/${eventId}`,
+        method: 'POST',
+        body: newExercise,
+      }),
+      invalidatesTags: ['Events'],
+    })
   })
 });
 
@@ -222,5 +238,7 @@ export const {
   useDeleteEventMutation,
   useAddEventExerciseMutation,
   useEditEventExerciseMutation,
-  useDeleteEventExerciseMutation
+  useDeleteEventExerciseMutation,
+  useUpdateAttendeeStatusMutation,
+  useAddExerciseToEventMutation
 } = api;

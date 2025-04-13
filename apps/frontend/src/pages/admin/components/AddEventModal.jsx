@@ -32,15 +32,30 @@ const AddEventModal = ({ open, onClose }) => {
     }
   });
 
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const pad = (n) => String(n).padStart(2, '0'); // pridanie nuly pre dni a mesiace menej ako 10
+    return `${pad(d.getDate())}:${pad(d.getMonth() + 1)}:${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  
   const onSubmit = async (data) => {
-    const response = await createEvent(data);
-    if (!response.error) {
-      toast.success('Udalosť bola úspešne pridaná');
-      onClose();
-      reset();
-    } else {
-      toast.error('Chyba pri pridávaní udalosti');
-    }
+  const formattedData = {
+    ...data,
+    datefrom: formatDate(data.datefrom),
+    dateto: formatDate(data.dateto),
+    dateClosing: formatDate(data.dateClosing),
+  };
+
+  const response = await createEvent(formattedData);
+
+  if (!response.error) {
+    toast.success('Udalosť bola úspešne pridaná');
+    onClose();
+    reset();
+  } else {
+    toast.error('Chyba pri pridávaní udalosti');
+  }
   };
 
   return (

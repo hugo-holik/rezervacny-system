@@ -6,6 +6,7 @@ const EventSchema = new mongoose.Schema(
     datefrom: { type: Date, required: true },
     dateto: { type: Date, required: true },
     dateClosing: { type: Date, required: true },
+    published: { type: Boolean, default: false},
     openExercises: [
       {
         date: { type: Date, required: true },
@@ -24,23 +25,25 @@ const EventSchema = new mongoose.Schema(
               required: true,
             },
             numOfAttendees: { type: Number, required: true },
-            approvalStatus: { type: String },
+            approvalStatus: { 
+              type: String ,
+              enum: ["čaká na schválenie", "schválené", "zamietnuté"],
+              default: "čaká na schválenie",
+            },
             createdAt: { type: Date, default: Date.now },
             approvedAt: { type: Date },
           },
         ],
-        status: { type: String, default: "čaká na schválenie" },
+        status: { 
+          type: String,
+          enum: ["čaká na schválenie", "schválené", "zamietnuté"],
+          default: "čaká na schválenie" ,
+        },
         note: { type: String, required: false },
       },
     ],
   },
   { timestamps: true }
 );
-
-EventSchema.pre("save", function (next) {
-  if (!this.isModified("approvalStatus")) return next();
-  this.approvedAt = new Date();
-  next();
-});
 
 module.exports = mongoose.model("Event", EventSchema);

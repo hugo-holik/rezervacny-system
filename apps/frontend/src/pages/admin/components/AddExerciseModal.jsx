@@ -1,19 +1,11 @@
-import { useCreateExerciseMutation } from '@app/redux/api';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography
-} from '@mui/material';
+import { useCreateExerciseMutation, useGetUsersListQuery } from '@app/redux/api';
+import {Box,Button,Dialog,DialogActions,DialogContent,DialogTitle,TextField,Typography,FormControl,InputLabel,Select,MenuItem} from '@mui/material';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 
 const AddExerciseModal = ({ open, onClose }) => {
   const [createExercise] = useCreateExerciseMutation();
+  const { data: users, isLoading: usersLoading } = useGetUsersListQuery();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [program, setProgram] = useState('');
@@ -21,6 +13,8 @@ const AddExerciseModal = ({ open, onClose }) => {
   const [duration, setDuration] = useState('');
   const [maxAttendees, setMaxAttendees] = useState('');
   const [color, setColor] = useState('');
+  const [leads, setLeads] = useState([]);
+  const [startTime, setStartTime] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
 
   const validateFields = () => {
@@ -31,15 +25,16 @@ const AddExerciseModal = ({ open, onClose }) => {
     if (!room) errors.room = 'validation.empty_room';
     if (!duration) errors.duration = 'validation.empty_duration';
     if (!maxAttendees) errors.maxAttendees = 'validation.maxAttendees';
-    // Leads and startTimes validation would depend on how they are handled in the backend
-    // Assuming leads and startTimes are added later or can be empty for now
+    if (!startTime) errors.startTime = 'validation.empty_startTime';
+    if (leads.length === 0) errors.leads = 'validation.empty_leads';
     if (
       errors.name ||
       errors.program ||
       errors.description ||
       errors.room ||
       errors.duration ||
-      errors.maxAttendees
+      errors.maxAttendees ||
+      errors.startTime
     ) {
       setValidationErrors(errors);
       return false;
@@ -52,6 +47,13 @@ const AddExerciseModal = ({ open, onClose }) => {
       return;
     }
 
+    // Convert startTime string (HH:mm DD:mm:YYYY) to a Date object
+    const [time, date] = startTime.split(' ');
+    const [hours, minutes] = time.split(':');
+    const [day, month, year] = date.split(':');
+
+    const currentDate = new Date(year, month - 1, day, hours, minutes, 0, 0); // Set the date and time
+
     const exerciseData = {
       name,
       description,
@@ -59,12 +61,14 @@ const AddExerciseModal = ({ open, onClose }) => {
       room,
       duration: parseInt(duration),
       maxAttendees: parseInt(maxAttendees),
-      color
+      color,
+      leads,
+      startTimes: [currentDate.toISOString()] 
     };
-    console.log('Exercise data to be sent:', exerciseData); // Log the data to be sent
+    console.log('Exercise data to be sent:', exerciseData);
     try {
       await createExercise(exerciseData).unwrap();
-      onClose(); // Close modal after successful submission
+      onClose();
     } catch (error) {
       console.error('Error adding exercise:', error);
     }
@@ -111,6 +115,18 @@ const AddExerciseModal = ({ open, onClose }) => {
             error={!!validationErrors.room}
             helperText={validationErrors.room && 'Miestnosť je povinná'}
           />
+          {/* Zaciatok cvicenia, treba zmenit na datepicker */}
+          <TextField
+            label="Začiatok (HH:mm DD:mm:YYYY)"
+            type="text"
+            fullWidth
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            margin="normal"
+            error={!!validationErrors.startTime}
+            helperText={validationErrors.startTime && 'Začiatok je povinný a musí byť v formáte HH:mm DD:mm:YYYY'}
+          />
+
           <TextField
             label="Dĺžka (min)"
             fullWidth
@@ -131,6 +147,30 @@ const AddExerciseModal = ({ open, onClose }) => {
             error={!!validationErrors.maxAttendees}
             helperText={validationErrors.maxAttendees && 'Maximálny počet účastníkov je povinný'}
           />
+          {/*----------------------------------------------- */}
+          <FormControl fullWidth margin="normal" error={!!validationErrors.leads}>
+            <InputLabel>Vyučujúci</InputLabel>
+            <Select
+              multiple
+              value={leads}
+              onChange={(e) => setLeads(e.target.value)}
+              label="Leads"
+              disabled={usersLoading}
+            >
+              {users?.map((user) => (
+                <MenuItem key={user._id} value={user._id}>
+                  {user.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {validationErrors.leads && (
+              <Typography color="error" variant="body2">
+                {validationErrors.leads}
+              </Typography>
+            )}
+          </FormControl>
+
+          {/* ---------------------------------------------- */}
           <TextField
             label="Farba"
             fullWidth

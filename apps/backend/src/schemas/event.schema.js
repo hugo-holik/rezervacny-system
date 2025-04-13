@@ -29,7 +29,10 @@ const createEventSchema = Joi.object({
                 "array.base": "Attendees must be an array of strings"
             })
         })
-    ).optional()
+    ).optional(),
+    approvalStatus: Joi.string().valid('čaká na schválenie', 'schválené', 'zamietnuté').optional().messages({
+    "any.only": "Approval status must be one of: 'čaká na schválenie', 'schválené', or 'zamietnuté'"
+    })
 }).unknown(false); // Disallow unknown keys
 
 const editEventSchema = Joi.object({
