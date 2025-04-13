@@ -8,6 +8,7 @@ const {
   addExcercise,
   editExercise,
   removeExercise,
+  updateAttendeeStatus,
 } = require("../controllers/eventController");
 
 const router = express.Router();
