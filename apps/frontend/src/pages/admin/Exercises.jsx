@@ -47,7 +47,6 @@ const Exercises = () => {
   }, {});
 
   const formatDate = (dateString) => {
-    console.log('Date string:', dateString);
     if (!dateString) return '-'; // Handle undefined dateString
 
     const date = new Date(dateString);
@@ -65,9 +64,7 @@ const Exercises = () => {
       headerName: 'Začiatok',
       flex: 1,
       valueFormatter: (params) => {
-        // params.value is the startTimes array directly
         if (params && Array.isArray(params)) {
-          // Format each date in the array
           return params.map((time) => formatDate(time)).join(', ');
         }
         return '-';
