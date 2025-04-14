@@ -159,21 +159,463 @@ const Calendar = () => {
         className="calendar-modal"
         overlayClassName="calendar-modal-overlay"
       >
-        <h2>{selectedEvent?.title}</h2>
-        <p>{selectedEvent?.description}</p>
-        <p>
-          <strong>Začiatok:</strong> {moment(selectedEvent?.start).format('LLLL')}
-        </p>
-        <p>
-          <strong>Koniec:</strong> {moment(selectedEvent?.end).format('LLLL')}
-        </p>
-        <div className="modal-buttons">
-          <button className="modal-btn join" onClick={handleJoinRequest}>
-            Pripojiť sa
-          </button>
-          <button className="modal-btn close" onClick={() => setIsModalOpen(false)}>
-            Zavrieť
-          </button>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          {/* Header with colored indicator and title */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: '24px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #f0f0f0'
+            }}
+          >
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor:
+                  selectedEvent?.color || (selectedEvent?.published ? '#4caf50' : '#f44336'),
+                borderRadius: '6px',
+                marginRight: '16px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            />
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '1.5rem',
+                fontWeight: 600,
+                color: '#333'
+              }}
+            >
+              {selectedEvent?.title}
+            </h2>
+          </div>
+
+          {/* Main content area */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '24px',
+              marginBottom: '24px'
+            }}
+          >
+            {/* Left column - Primary information */}
+            <div>
+              {/* Description */}
+              {selectedEvent?.description && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#666',
+                      marginBottom: '8px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    Popis
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: '0.9375rem',
+                      lineHeight: '1.5',
+                      color: '#444'
+                    }}
+                  >
+                    {selectedEvent?.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Time information */}
+              <div style={{ marginBottom: '20px' }}>
+                <h3
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#666',
+                    marginBottom: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  Časový rozvrh
+                </h3>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px'
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Začiatok
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {moment(selectedEvent?.start).format('LLL')}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Koniec
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {moment(selectedEvent?.end).format('LLL')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details grid */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: '16px'
+                }}
+              >
+                {selectedEvent?.program && (
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Program
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {selectedEvent?.program}
+                    </p>
+                  </div>
+                )}
+                {selectedEvent?.room && (
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Miestnosť
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {selectedEvent?.room}
+                    </p>
+                  </div>
+                )}
+                {selectedEvent?.duration && (
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Dĺžka
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {selectedEvent?.duration} min
+                    </p>
+                  </div>
+                )}
+                {selectedEvent?.maxAttendees && (
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Kapacita
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {selectedEvent?.maxAttendees}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right column - Secondary information */}
+            <div>
+              {/* Instructors */}
+              {selectedEvent?.leads?.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h3
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#666',
+                      marginBottom: '12px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    Vyučujúci ({selectedEvent.leads.length})
+                  </h3>
+                  <div
+                    style={{
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: '8px',
+                      padding: '12px'
+                    }}
+                  >
+                    {selectedEvent.leads.map((leadId) => (
+                      <div
+                        key={leadId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '8px 0',
+                          borderBottom: '1px solid #eee'
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '12px',
+                            fontWeight: 600,
+                            color: '#555',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          {leadId.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p
+                            style={{
+                              margin: '0 0 2px 0',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#333'
+                            }}
+                          >
+                            {/* Replace with actual name */}
+                            Profesor {leadId.substring(0, 4)}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: '0.75rem',
+                              color: '#888'
+                            }}
+                          >
+                            ID: {leadId}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div>
+                <h3
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#666',
+                    marginBottom: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  Metadáta
+                </h3>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px'
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Vytvorené
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }}
+                    >
+                      {moment(selectedEvent?.createdAt).format('LL')}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '0.8125rem',
+                        fontWeight: 500,
+                        color: '#888'
+                      }}
+                    >
+                      Farba udalosti
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          backgroundColor: selectedEvent?.color,
+                          borderRadius: '4px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        }}
+                      />
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          color: '#333'
+                        }}
+                      >
+                        {selectedEvent?.color}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px',
+              paddingTop: '16px',
+              borderTop: '1px solid #f0f0f0'
+            }}
+          >
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '6px',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                backgroundColor: '#f5f5f5',
+                color: '#555',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                ':hover': {
+                  backgroundColor: '#e0e0e0'
+                }
+              }}
+            >
+              Zavrieť
+            </button>
+            <button
+              onClick={handleJoinRequest}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '6px',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                backgroundColor: '#4caf50',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                ':hover': {
+                  backgroundColor: '#3d8b40'
+                }
+              }}
+            >
+              Prihlásiť sa
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
