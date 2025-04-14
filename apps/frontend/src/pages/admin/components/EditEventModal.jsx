@@ -8,9 +8,13 @@ import {
   DialogTitle,
   TextField
 } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { editEventSchema } from '../schemas/event.schema';
 
@@ -18,7 +22,7 @@ const EditEventModal = ({ open, onClose, eventData }) => {
   const [editEvent, { isLoading }] = useEditEventMutation();
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors }
@@ -27,9 +31,9 @@ const EditEventModal = ({ open, onClose, eventData }) => {
     resolver: joiResolver(editEventSchema),
     defaultValues: {
       name: '',
-      datefrom: '',
-      dateto: '',
-      dateClosing: ''
+      datefrom: null,
+      dateto: null,
+      dateClosing: null
     }
   });
 
@@ -37,76 +41,122 @@ const EditEventModal = ({ open, onClose, eventData }) => {
     if (eventData) {
       reset({
         name: eventData.name || '',
-        datefrom: eventData.datefrom ? formatDateTimeForInput(eventData.datefrom) : '',
-        dateto: eventData.dateto ? formatDateTimeForInput(eventData.dateto) : '',
-        dateClosing: eventData.dateClosing ? formatDateTimeForInput(eventData.dateClosing) : ''
+        datefrom: eventData.datefrom ? new Date(eventData.datefrom) : null,
+        dateto: eventData.dateto ? new Date(eventData.dateto) : null,
+        dateClosing: eventData.dateClosing ? new Date(eventData.dateClosing) : null
       });
     }
   }, [eventData, reset]);
 
-  const formatDateTimeForInput = (dateString) => {
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
-  };
-
   const onSubmit = async (data) => {
-    const response = await editEvent({ Id: eventData._id, ...data });
-    if (!response.error) {
-      toast.success('Udalosť bola úspešne upravená');
-      onClose();
-    } else {
-      toast.error('Chyba pri úprave udalosti');
+    const formattedData = {
+      ...data,
+      datefrom: data.datefrom?.toISOString() || null,
+      dateto: data.dateto?.toISOString() || null,
+      dateClosing: data.dateClosing?.toISOString() || null
+    };
+
+    try {
+      const response = await editEvent({ Id: eventData._id, ...formattedData });
+
+      if (!response.error) {
+        toast.success('Udalosť bola úspešne upravená');
+        onClose();
+        reset();
+      } else {
+        toast.error('Chyba pri úprave udalosti');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Chyba pri úprave udalosti');
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} component="form" onSubmit={handleSubmit(onSubmit)}>
-      <DialogTitle>Uprav udalosť</DialogTitle>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: '30rem' }}>
-        <TextField
-          label="Názov"
-          {...register('name')}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Dialog open={open} onClose={onClose} component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogTitle>Uprav udalosť</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: '30rem' }}>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                label="Názov"
+                {...field}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            )}
+          />
 
-        <TextField
-          label="Dátum začiatku"
-          type="datetime-local"
-          {...register('datefrom')}
-          error={!!errors.datefrom}
-          helperText={errors.datefrom?.message}
-          InputLabelProps={{ shrink: true }}
-        />
+          <Controller
+            name="datefrom"
+            control={control}
+            render={({ field }) => (
+              <DateTimePicker
+                label="Dátum začiatku"
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
+                format="DD.MM.YYYY - HH:mm"
+                slotProps={{
+                  textField: {
+                    error: !!errors.datefrom,
+                    helperText: errors.datefrom?.message
+                  }
+                }}
+              />
+            )}
+          />
 
-        <TextField
-          label="Dátum konca"
-          type="datetime-local"
-          {...register('dateto')}
-          error={!!errors.dateto}
-          helperText={errors.dateto?.message}
-          InputLabelProps={{ shrink: true }}
-        />
+          <Controller
+            name="dateto"
+            control={control}
+            render={({ field }) => (
+              <DateTimePicker
+                label="Dátum konca"
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
+                format="DD.MM.YYYY - HH:mm"
+                slotProps={{
+                  textField: {
+                    error: !!errors.dateto,
+                    helperText: errors.dateto?.message
+                  }
+                }}
+              />
+            )}
+          />
 
-        <TextField
-          label="Uzávierka"
-          type="datetime-local"
-          {...register('dateClosing')}
-          error={!!errors.dateClosing}
-          helperText={errors.dateClosing?.message}
-          InputLabelProps={{ shrink: true }}
-        />
-      </DialogContent>
+          <Controller
+            name="dateClosing"
+            control={control}
+            render={({ field }) => (
+              <DateTimePicker
+                label="Uzávierka"
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
+                format="DD.MM.YYYY - HH:mm"
+                slotProps={{
+                  textField: {
+                    error: !!errors.dateClosing,
+                    helperText: errors.dateClosing?.message
+                  }
+                }}
+              />
+            )}
+          />
+        </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} color="error" variant="outlined">
-          Zruš
-        </Button>
-        <Button type="submit" variant="contained" disabled={isLoading}>
-          Ulož
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose} color="error" variant="outlined">
+            Zruš
+          </Button>
+          <Button type="submit" variant="contained" disabled={isLoading}>
+            Ulož
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </LocalizationProvider>
   );
 };
 
