@@ -5,6 +5,10 @@
   margin: 0 auto;
 }
 
+.calendar-wrapper.modal-open {
+  filter: brightness(0.4);
+}
+
 .calendar-title {
   font-family: 'Inter', sans-serif;
   font-weight: 600;

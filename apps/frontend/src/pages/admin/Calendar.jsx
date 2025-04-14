@@ -110,7 +110,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="calendar-wrapper">
+    <div className={`calendar-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
       <div className="calendar-box">
         <BigCalendar
           localizer={localizer}
