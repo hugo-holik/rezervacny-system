@@ -74,7 +74,7 @@ const Exercises = () => {
       <Grid py={1} px={1} container spacing={1}>
         <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
-            Externé školy
+            Cvičenia
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>

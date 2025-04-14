@@ -1,15 +1,15 @@
-import { useGetAllEventsQuery, useAddExerciseToEventMutation, useDeleteEventMutation } from '@app/redux/api'; 
-import { Box, Button, Grid, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import ConfirmationDialog from '@app/components/ConfirmationDialog';
+import { useDeleteEventMutation, useGetAllEventsQuery } from '@app/redux/api';
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import AddEventModal from './components/AddEventModal';
+import AddExerciseToEventModal from './components/AddExerciseToEventModal';
 import EditEventModal from './components/EditEventModal';
-import AddExerciseToEventModal from './components/AddExerciseToEventModal'; 
 
 const Events = () => {
   const { data, isLoading } = useGetAllEventsQuery();
@@ -19,7 +19,7 @@ const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   const [deleteEvent] = useDeleteEventMutation();
-  const [addExerciseToEvent] = useAddExerciseToEventMutation();
+  // const [addExerciseToEvent] = useAddExerciseToEventMutation();
 
   const handleEditClick = (params) => {
     setSelectedEvent(params.row);
@@ -38,25 +38,17 @@ const Events = () => {
         toast.success('Udalosť bola úspešne odstránená!');
       })
       .catch((error) => {
-        toast.error('Chyba pri odstraňovaní udalosti');
+        toast.error('Chyba pri odstraňovaní udalosti', error);
       });
   };
 
-  const formatDate = (input) => {
-    if (!input || input === '—') return '—'; // Return fallback if no date is present
-  
-    const date = new Date(input);
-    if (isNaN(date.getTime())) return 'Neplatný dátum'; // Invalid date
-  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
     const pad = (n) => String(n).padStart(2, '0');
-
-    console.log('Raw date:', row?.datefrom);  // Check if this is a valid date
-    console.log('Formatted date:', formatDate(row?.datefrom)); // Check the formatted result
-    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
-  
-  
-    /*
+
+  /*
   if (data && data.length > 0) {
     console.log("Raw data:", data);
     console.log("Date from (first event):", data[0]?.datefrom);
@@ -68,30 +60,31 @@ const Events = () => {
     {
       field: 'name',
       headerName: 'Názov',
-      flex: 1,
+      flex: 1
     },
     {
       field: 'datefrom',
       headerName: 'Dátum od',
       flex: 1,
-      valueGetter: ({ row }) => formatDate(new Date(row?.datefrom)), // Ensure it's a Date object
+      valueFormatter: (params) => formatDate(params)
     },
     {
       field: 'dateto',
       headerName: 'Dátum do',
       flex: 1,
-      valueGetter: ({ row }) => formatDate(new Date(row?.dateto)), // Ensure it's a Date object
+      valueFormatter: (params) => formatDate(params)
     },
     {
       field: 'dateClosing',
       headerName: 'Deadline',
       flex: 1,
-      valueGetter: ({ row }) => formatDate(new Date(row?.dateClosing)), // Ensure it's a Date object
+      valueFormatter: (params) => formatDate(params)
     },
     {
       field: 'actions',
       headerName: 'Akcie',
       type: 'actions',
+      minWidth: 150,
       getActions: (params) => [
         <Tooltip key="edit" title="Upraviť udalosť">
           <IconButton onClick={() => handleEditClick(params)}>
@@ -117,16 +110,16 @@ const Events = () => {
       ]
     }
   ];
-  
-  
 
   return (
     <Box py={2}>
-      <Grid container spacing={1} px={2}>
-        <Grid item xs={9}>
-          <Typography variant="h4">Špeciálne cvičenia</Typography>
+      <Grid py={1} px={1} container spacing={1}>
+        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
+          <Typography variant="h4" alignSelf={'center'}>
+            Špeciálne cvičenia
+          </Typography>
         </Grid>
-        <Grid item xs={3} display="flex" justifyContent="flex-end">
+        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
           <Button variant="contained" onClick={() => setOpenAddModal(true)}>
             Pridaj udalosť
           </Button>
@@ -143,12 +136,14 @@ const Events = () => {
           slotProps={{ toolbar: { showQuickFilter: true } }}
           pageSizeOptions={[10, 20, 50]}
           initialState={{
+            density: 'compact',
             pagination: {
               paginationModel: {
                 pageSize: 10
               }
             }
           }}
+          isRowSelectable={() => false}
         />
       </Paper>
 
