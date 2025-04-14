@@ -124,7 +124,7 @@ exports.addExcercise = async (req, res) => {
     return res.status(400).send({ error: "Exercise conflict." });
   }
 
-  const exercise = await Exercise.findOne({ _id: req.body.exercise._id });
+  const exercise = await Exercise.findOne({ _id: req.body.exercise });
   if (!exercise) {
     return res.status(404).send();
   }
@@ -140,8 +140,13 @@ exports.addExcercise = async (req, res) => {
   };
 
   eventRecord.openExercises.push(newExercise);
-  await eventRecord.save();
-  res.send({});
+
+  try {
+    await eventRecord.save();
+    res.status(200).send({});
+  } catch (err) {
+    return res.status(500).json({ error: `${req.t("messages.database_error")}: ${err.message}` });
+  }
 };
   
   exports.editExercise = [
