@@ -128,15 +128,27 @@ const Calendar = () => {
             weekdayFormat: 'dddd', // Full weekday name
             timeGutterFormat: 'HH:mm' // Time format
           }}
-          eventPropGetter={(event) => ({
-            style: {
-              backgroundColor: event.color,
-              borderRadius: '6px',
-              padding: '4px',
-              color: '#fff',
-              border: 'none'
-            }
-          })}
+          eventPropGetter={(event) => {
+            const baseColor = event.color || '#4299e1';
+            const transparentBg = baseColor + '99'; // ~13% opacity
+
+            return {
+              className: 'custom-event',
+              style: {
+                borderLeft: `4px solid ${baseColor}`,
+                backgroundColor: transparentBg,
+                border: `1px solid ${baseColor}`,
+                color: '#2d3748',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontWeight: 500,
+                fontSize: '0.8rem',
+                marginInline: '5px',
+                boxShadow: `0 2px 4px ${baseColor}33`,
+                transition: 'all 0.2s ease'
+              }
+            };
+          }}
         />
       </div>
 
