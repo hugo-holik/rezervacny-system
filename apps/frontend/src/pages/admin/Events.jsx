@@ -51,14 +51,6 @@ const Events = () => {
     return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${hours}:${minutes}`;
   };
 
-  /*
-  if (data && data.length > 0) {
-    console.log("Raw data:", data);
-    console.log("Date from (first event):", data[0]?.datefrom);
-    console.log("Parsed date:", new Date(data[0]?.datefrom));
-  
-  }
-*/
   const columns = [
     {
       field: 'name',
