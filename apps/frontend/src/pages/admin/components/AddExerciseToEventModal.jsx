@@ -1,6 +1,7 @@
-import {Dialog,DialogActions,DialogContent,DialogTitle,Button,TextField} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
   import { useState } from 'react';
   import { useAddExerciseToEventMutation } from '@app/redux/api';
+  import { useGetAllExercisesQuery } from '@app/redux/api';
   
   const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
     const [date, setDate] = useState('');
@@ -8,7 +9,20 @@ import {Dialog,DialogActions,DialogContent,DialogTitle,Button,TextField} from '@
     const [exerciseId, setExerciseId] = useState('');
     const [note, setNote] = useState('');
     const [addExerciseToEvent] = useAddExerciseToEventMutation();
-  
+    const { data: exercises = [], isLoading: isExerciseLoading } = useGetAllExercisesQuery();
+    const eventStart = new Date(eventData?.datefrom);
+    const eventEnd = new Date(eventData?.dateto);
+
+    const filteredExercises = exercises.filter((exercise) => {
+      const exerciseDate = new Date(exercise.datefrom);
+      return exerciseDate >= eventStart && exerciseDate <= eventEnd;
+    });
+
+    const formatDateTime = (isoDate) => {
+      const date = new Date(isoDate);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };    
     const handleSubmit = async () => {
       try {
         await addExerciseToEvent({
@@ -48,13 +62,25 @@ import {Dialog,DialogActions,DialogContent,DialogTitle,Button,TextField} from '@
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
-          <TextField
-            fullWidth
-            label="ID cvičenia"
-            margin="normal"
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="exercise-select-label">Vyber cvičenie</InputLabel>
+          <Select
+            labelId="exercise-select-label"
             value={exerciseId}
+            label="Vyber cvičenie"
             onChange={(e) => setExerciseId(e.target.value)}
-          />
+          >
+            {filteredExercises.length === 0 ? (
+              <MenuItem disabled>Žiadne cvičenia v tomto dátume</MenuItem>
+            ) : (
+              filteredExercises.map((exercise) => (
+                <MenuItem key={exercise._id} value={exercise._id}>
+                  {exercise.name} – {formatDateTime(exercise.datefrom)}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
           <TextField
             fullWidth
             label="Poznámka"
