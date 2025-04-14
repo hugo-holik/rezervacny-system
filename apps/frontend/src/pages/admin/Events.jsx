@@ -32,13 +32,14 @@ const Events = () => {
   };
 
   const handleDeleteEvent = (eventId) => {
-    deleteEvent({ eventId })
+    deleteEvent(eventId)
       .unwrap()
       .then(() => {
         toast.success('Udalosť bola úspešne odstránená!');
       })
       .catch((error) => {
-        toast.error('Chyba pri odstraňovaní udalosti', error);
+        toast.error('Chyba pri odstraňovaní udalosti');
+        console.error('Delete error:', error);
       });
   };
 
