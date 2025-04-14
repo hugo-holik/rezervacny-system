@@ -6,16 +6,16 @@ export const createEventSchema = Joi.object({
         "string.min": "Name must be at least 2 characters",
         "string.max": "Name must not exceed 100 characters",
     }),
-    datefrom: Joi.date().required().messages({
+    datefrom: Joi.date().iso().required().messages({
         "date.base": "Date from must be a valid date",
         "any.required": "Date from is required"
     }),
-    dateto: Joi.date().required().greater(Joi.ref('datefrom')).messages({
+    dateto: Joi.date().iso().required().greater(Joi.ref('datefrom')).messages({
         "date.base": "Date to must be a valid date",
         "date.greater": "Date to must be after Date from",
         "any.required": "Date to is required"
     }),
-    dateClosing: Joi.date().required().less(Joi.ref('dateto')).messages({
+    dateClosing: Joi.date().iso().required().less(Joi.ref('dateto')).messages({
         "date.base": "Date closing must be a valid date",
         "date.less": "Closing date must be before Date to",
         "any.required": "Date closing is required"
@@ -37,13 +37,13 @@ export const editEventSchema = Joi.object({
         "string.min": "Name must be at least 2 characters",
         "string.max": "Name must not exceed 100 characters",
     }),
-    datefrom: Joi.date().optional().messages({
+    datefrom: Joi.date().iso().optional().messages({
         "date.base": "Date from must be a valid date",
     }),
-    dateto: Joi.date().optional().messages({
+    dateto: Joi.date().iso().optional().messages({
         "date.base": "Date to must be a valid date",
     }),
-    dateClosing: Joi.date().optional().messages({
+    dateClosing: Joi.date().iso().optional().messages({
         "date.base": "Date closing must be a valid date",
     }),
     openExercises: Joi.array().items(

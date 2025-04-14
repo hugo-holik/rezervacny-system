@@ -46,7 +46,9 @@ const Events = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${hours}:${minutes}`;
   };
 
   /*
