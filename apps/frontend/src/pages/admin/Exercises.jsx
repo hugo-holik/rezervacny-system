@@ -15,7 +15,11 @@ import AddExerciseModal from './components/AddExerciseModal';
 import EditExerciseModal from './components/EditExerciseModal';
 
 const Exercises = () => {
-  const { data, isLoading } = useGetAllExercisesQuery();
+  const {
+    data,
+    isLoading,
+    refetch // <- this will be used to reload data after update
+  } = useGetAllExercisesQuery();
   const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
   const [openAddModal, setOpenAddModal] = useState(false);
@@ -158,11 +162,20 @@ const Exercises = () => {
       </Paper>
 
       <AddExerciseModal open={openAddModal} onClose={() => setOpenAddModal(false)} />
-      <EditExerciseModal
-        open={openEditModal}
-        onClose={() => setOpenEditModal(false)}
-        exerciseData={selectedExercise}
-      />
+      {openEditModal && selectedExercise && (
+        <EditExerciseModal
+          open={openEditModal}
+          onClose={(shouldRefresh) => {
+            setOpenEditModal(false);
+            setSelectedExercise(null);
+            if (shouldRefresh) {
+              refetch();
+            }
+          }}
+          exerciseData={selectedExercise}
+          users={users}
+        />
+      )}
     </Box>
   );
 };

@@ -117,10 +117,10 @@ export const api = createApi({
       invalidatesTags: (result) => (result ? ['Exercises'] : [])
     }),
     editExercise: builder.mutation({
-      query: ({ Id, ...data }) => ({
-        url: `/exercise/${Id}`,
+      query: ({ id, ...data }) => ({
+        url: `/exercise/${id}`, // `id` lowercase to match naming convention
         method: 'PUT',
-        body: data // Send only updated fields
+        body: data // Just the updated fields
       }),
       invalidatesTags: (result) => (result ? ['Exercise'] : [])
     }),
@@ -173,7 +173,7 @@ export const api = createApi({
     }),
 
     addEventExercise: builder.mutation({
-      query: ({Id, ...data}) => ({
+      query: ({ Id, ...data }) => ({
         url: `/event/addExercise/${Id}`,
         method: 'POST',
         body: data

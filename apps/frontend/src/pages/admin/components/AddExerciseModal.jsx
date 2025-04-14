@@ -165,11 +165,15 @@ const AddExerciseModal = ({ open, onClose }) => {
                 label="Vyučujúci"
                 disabled={usersLoading}
               >
-                {users?.map((user) => (
-                  <MenuItem key={user._id} value={user._id}>
-                    {user.name}
-                  </MenuItem>
-                ))}
+                {!usersLoading && users && users.length > 0 ? (
+                  users.map((user) => (
+                    <MenuItem key={user._id} value={user._id}>
+                      {user.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No users available</MenuItem>
+                )}
               </Select>
               {validationErrors.leads && (
                 <Typography color="error" variant="caption">
