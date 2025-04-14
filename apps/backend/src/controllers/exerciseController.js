@@ -2,6 +2,7 @@ const { throwError, errorFormatter } = require("../util/universal");
 const { createExerciseSchema, updateExerciseSchema } = require("../schemas/exercise.schema");
 const { matchedData } = require('express-validator');
 const Exercise = require("../models/exercise");
+const { validate, validated } = require("../util/validation");
 //const Event = require("../models/events");
 
 exports.create = async (req, res) => {
@@ -63,48 +64,38 @@ exports.getAll = async (req, res) => {
   }
 };
 
-exports.edit = async (req, res) => {
-  try {
-    // Validate the incoming data
-    const { error } = updateExerciseSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        errors: error.details.map((detail) => detail.message),
-      });
-    }
-
-    const matched = matchedData(req, {
-      includeOptional: true,
-      onlyValidData: true,
-    });
-    console.log("Matched Data:", matched); // Log the matched data
+exports.edit = [
+  validate(updateExerciseSchema),
+  async (req, res) => {
+    const data = validated(req);
+    
     const record = await Exercise.findOne({ _id: req.params.id });
     if (!record) {
       return res.status(404).send();
     }
 
-    try {
-      for (const key in matched) {
-        if (matched[key] !== undefined) {
-          record[key] = matched[key];
-        }
-      }
+    Object.assign(record, data);
 
+    try {
       await record.save();
+      
       return res.status(200).send({});
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
-  } catch (err) {
-    return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
-  }
-};
+  },
+];
 
 exports.remove = async (req, res) => {
   const exerciseId = req.params.id;
   const record = await Exercise.findOne({ _id: exerciseId });
   if (record) {
     try {
+      // await Event.updateMany(
+      //   { openExercises: { $elemMatch: { exercise: exerciseId } } },
+      //   { $pull: { openExercises: { exercise: exerciseId } } }
+      // );
+      
       await Exercise.deleteOne({ _id: exerciseId });
 
       res.status(200).send({});
