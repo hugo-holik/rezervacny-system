@@ -1,9 +1,13 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteExerciseMutation, useGetAllExercisesQuery } from '@app/redux/api';
+import {
+  useDeleteExerciseMutation,
+  useGetAllExercisesQuery,
+  useGetUsersListQuery
+} from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material'; // Change Grid2 to Grid
+import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -12,10 +16,11 @@ import EditExerciseModal from './components/EditExerciseModal';
 
 const Exercises = () => {
   const { data, isLoading } = useGetAllExercisesQuery();
+  const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
-  const [openAddModal, setOpenAddModal] = useState(false); // State to open Add Exercise Modal
-  const [openEditModal, setOpenEditModal] = useState(false); // State to open Edit Exercise Modal
-  const [selectedExercise, setSelectedExercise] = useState(null); // State to store selected exercise for editing
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState(null);
 
   const onRemoveHandler = async (id) => {
     if (!id) {
@@ -36,20 +41,59 @@ const Exercises = () => {
     setOpenEditModal(true);
   };
 
+  const userMap = users.reduce((acc, user) => {
+    acc[user._id] = user.name;
+    return acc;
+  }, {});
+
+  const formatDate = (dateString) => {
+    console.log('Date string:', dateString);
+    if (!dateString) return '-'; // Handle undefined dateString
+
+    const date = new Date(dateString);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
   const columns = [
     { field: 'name', headerName: 'Názov', flex: 1, minWidth: 150 },
     { field: 'program', headerName: 'Program', flex: 1 },
     { field: 'description', headerName: 'Popis', flex: 1 },
     { field: 'room', headerName: 'Miestnosť', flex: 1 },
+    {
+      field: 'startTimes',
+      headerName: 'Začiatok',
+      flex: 1,
+      valueFormatter: (params) => {
+        // params.value is the startTimes array directly
+        if (params && Array.isArray(params)) {
+          // Format each date in the array
+          return params.map((time) => formatDate(time)).join(', ');
+        }
+        return '-';
+      }
+    },
     { field: 'duration', headerName: 'Trvanie (min)', flex: 1 },
     { field: 'maxAttendees', headerName: 'Max. počet účastníkov', flex: 1 },
+    {
+      field: 'leads',
+      headerName: 'Vyučujúci',
+      flex: 1,
+      valueGetter: (params) => {
+        const leadIds = params ?? []; // Safely get the leads array, default to []
+        return leadIds
+          .map((id) => userMap[id])
+          .filter(Boolean)
+          .join(', ');
+      }
+    },
     { field: 'color', headerName: 'Farba', flex: 1 },
     {
       field: 'actions',
       type: 'actions',
       headerName: 'Akcie',
       getActions: (params) => [
-        <Tooltip key="edit" title="Upravit cvičenie">
+        <Tooltip key="edit" title="Upraviť cvičenie">
           <IconButton onClick={() => handleRowClick(params)}>
             <EditIcon />
           </IconButton>
@@ -72,27 +116,25 @@ const Exercises = () => {
   return (
     <Box py={2}>
       <Grid py={1} px={1} container spacing={1}>
-        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
+        <Grid item xs={12} sm={9} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
             Cvičenia
           </Typography>
         </Grid>
-        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
-          <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
-            <Button
-              sx={{ m: 1, minWidth: '15rem' }}
-              variant="contained"
-              color="primary"
-              onClick={() => setOpenAddModal(true)} // Open Add Modal on button click
-            >
-              Pridaj cvičenie
-            </Button>
-          </Grid>
+        <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
+          <Button
+            sx={{ m: 1, minWidth: '15rem' }}
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenAddModal(true)}
+          >
+            Pridaj cvičenie
+          </Button>
         </Grid>
       </Grid>
       <Paper sx={{ mt: 2 }}>
         <DataGrid
-          loading={isLoading}
+          loading={isLoading || usersLoading}
           rows={data || []}
           columns={columns}
           getRowId={(row) => row._id}
@@ -118,17 +160,11 @@ const Exercises = () => {
         />
       </Paper>
 
-      {/* Add Exercise Modal */}
-      <AddExerciseModal
-        open={openAddModal}
-        onClose={() => setOpenAddModal(false)} // Close Add Modal
-      />
-
-      {/* Edit Exercise Modal */}
+      <AddExerciseModal open={openAddModal} onClose={() => setOpenAddModal(false)} />
       <EditExerciseModal
         open={openEditModal}
-        onClose={() => setOpenEditModal(false)} // Close Edit Modal
-        exerciseData={selectedExercise} // Pass selected exercise data to Edit Modal
+        onClose={() => setOpenEditModal(false)}
+        exerciseData={selectedExercise}
       />
     </Box>
   );
