@@ -34,7 +34,7 @@
   color: unset !important;
 }
 .rbc-event.custom-event:hover {
-  transform: translateY(-1px);
+  transform: scale(1.011);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
@@ -45,7 +45,7 @@
   border-radius: 8px;
   padding: 0.5rem 1rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.5s ease;
 }
 
 .rbc-toolbar button:hover {
