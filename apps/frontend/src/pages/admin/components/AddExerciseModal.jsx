@@ -14,7 +14,8 @@ import {
   Select,
   Stack,
   TextField,
-  Typography
+  Typography,
+  useTheme
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -22,8 +23,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { SketchPicker } from 'react-color';
 
 const AddExerciseModal = ({ open, onClose }) => {
+  const theme = useTheme();
   const [createExercise] = useCreateExerciseMutation();
   const { data: users, isLoading: usersLoading } = useGetUsersListQuery();
 
@@ -33,7 +36,7 @@ const AddExerciseModal = ({ open, onClose }) => {
   const [room, setRoom] = useState('');
   const [duration, setDuration] = useState('');
   const [maxAttendees, setMaxAttendees] = useState('');
-  const [color, setColor] = useState('');
+  const [color, setColor] = useState('#000000');
   const [leads, setLeads] = useState([]);
   const [newStartTime, setNewStartTime] = useState(null);
   const [startTimes, setStartTimes] = useState([]);
@@ -41,14 +44,14 @@ const AddExerciseModal = ({ open, onClose }) => {
 
   const validateFields = () => {
     const errors = {};
-    if (!name) errors.name = 'validation.empty_name';
-    if (!program) errors.program = 'validation.empty_program';
-    if (!description) errors.description = 'validation.empty_description';
-    if (!room) errors.room = 'validation.empty_room';
-    if (!duration) errors.duration = 'validation.empty_duration';
-    if (!maxAttendees) errors.maxAttendees = 'validation.maxAttendees';
-    if (startTimes.length === 0) errors.startTime = 'validation.empty_startTime';
-    if (leads.length === 0) errors.leads = 'validation.empty_leads';
+    if (!name) errors.name = 'Názov je povinný';
+    if (!program) errors.program = 'Program je povinný';
+    if (!description) errors.description = 'Popis je povinný';
+    if (!room) errors.room = 'Miestnosť je povinná';
+    if (!duration) errors.duration = 'Dĺžka je povinná';
+    if (!maxAttendees) errors.maxAttendees = 'Maximálny počet je povinný';
+    if (startTimes.length === 0) errors.startTime = 'Aspoň jeden začiatok je povinný';
+    if (leads.length === 0) errors.leads = 'Vyberte aspoň jedného vedúceho';
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -80,8 +83,6 @@ const AddExerciseModal = ({ open, onClose }) => {
       startTimes: startTimes.map((time) => time.toISOString())
     };
 
-    console.log('Exercise data to be sent:', exerciseData);
-
     try {
       await createExercise(exerciseData).unwrap();
       onClose();
@@ -92,113 +93,76 @@ const AddExerciseModal = ({ open, onClose }) => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Pridať cvičenie</DialogTitle>
-        <DialogContent>
-          <Box sx={{ width: '400px' }}>
-            <TextField
-              label="Názov"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              margin="normal"
-              error={!!validationErrors.name}
-              helperText={validationErrors.name && 'Názov je povinný'}
-            />
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold', fontSize: 24, pb: 0 }}>Pridať cvičenie</DialogTitle>
+        <DialogContent sx={{ pt: 2, pb: 1 }}>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Názov"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                error={!!validationErrors.name}
+                helperText={validationErrors.name}
+              />
+              <TextField
+                label="Program"
+                fullWidth
+                value={program}
+                onChange={(e) => setProgram(e.target.value)}
+                error={!!validationErrors.program}
+                helperText={validationErrors.program}
+              />
+            </Stack>
+
             <TextField
               label="Popis"
               fullWidth
+              multiline
+              minRows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              margin="normal"
               error={!!validationErrors.description}
-              helperText={validationErrors.description && 'Popis je povinný'}
-            />
-            <TextField
-              label="Program"
-              fullWidth
-              value={program}
-              onChange={(e) => setProgram(e.target.value)}
-              margin="normal"
-              error={!!validationErrors.program}
-              helperText={validationErrors.program && 'Program je povinný'}
-            />
-            <TextField
-              label="Miestnosť"
-              fullWidth
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-              margin="normal"
-              error={!!validationErrors.room}
-              helperText={validationErrors.room && 'Miestnosť je povinná'}
+              helperText={validationErrors.description}
             />
 
-            {/* Add Start Times */}
-            <Stack direction="row" spacing={1} alignItems="center" marginTop={2}>
-              <DateTimePicker
-                label="Pridať začiatok"
-                value={newStartTime}
-                onChange={setNewStartTime}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!validationErrors.startTime,
-                    helperText: validationErrors.startTime && 'Aspoň jeden začiatok je povinný'
-                  }
-                }}
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Miestnosť"
+                fullWidth
+                value={room}
+                onChange={(e) => setRoom(e.target.value)}
+                error={!!validationErrors.room}
+                helperText={validationErrors.room}
               />
-              <Button onClick={handleAddStartTime} variant="contained">
-                Pridať
-              </Button>
+              <TextField
+                label="Dĺžka (min)"
+                fullWidth
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                error={!!validationErrors.duration}
+                helperText={validationErrors.duration}
+              />
+              <TextField
+                label="Max. účastníkov"
+                fullWidth
+                type="number"
+                value={maxAttendees}
+                onChange={(e) => setMaxAttendees(e.target.value)}
+                error={!!validationErrors.maxAttendees}
+                helperText={validationErrors.maxAttendees}
+              />
             </Stack>
 
-            {startTimes.length > 0 && (
-              <Box mt={2}>
-                <Typography variant="subtitle2">Začiatky:</Typography>
-                {startTimes.map((time, index) => (
-                  <Stack
-                    direction="row"
-                    key={index}
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography>{dayjs(time).format('DD.MM.YYYY HH:mm')}</Typography>
-                    <IconButton onClick={() => handleRemoveStartTime(index)} size="small">
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                ))}
-              </Box>
-            )}
-
-            <TextField
-              label="Dĺžka (min)"
-              fullWidth
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              margin="normal"
-              error={!!validationErrors.duration}
-              helperText={validationErrors.duration && 'Dĺžka je povinná'}
-            />
-            <TextField
-              label="Maximálny počet účastníkov"
-              fullWidth
-              type="number"
-              value={maxAttendees}
-              onChange={(e) => setMaxAttendees(e.target.value)}
-              margin="normal"
-              error={!!validationErrors.maxAttendees}
-              helperText={validationErrors.maxAttendees && 'Maximálny počet účastníkov je povinný'}
-            />
-
-            <FormControl fullWidth margin="normal" error={!!validationErrors.leads}>
+            <FormControl fullWidth error={!!validationErrors.leads}>
               <InputLabel>Vyučujúci</InputLabel>
               <Select
                 multiple
                 value={leads}
                 onChange={(e) => setLeads(e.target.value)}
-                label="Leads"
+                label="Vyučujúci"
                 disabled={usersLoading}
               >
                 {users?.map((user) => (
@@ -208,31 +172,80 @@ const AddExerciseModal = ({ open, onClose }) => {
                 ))}
               </Select>
               {validationErrors.leads && (
-                <Typography color="error" variant="body2">
+                <Typography color="error" variant="caption">
                   {validationErrors.leads}
                 </Typography>
               )}
             </FormControl>
 
-            <TextField
-              label="Farba"
-              fullWidth
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              margin="normal"
-            />
-          </Box>
+            <Stack direction="row" spacing={4} alignItems="flex-start">
+              {/* Start Times Section */}
+              <Box flex={1}>
+                <Typography variant="subtitle1" fontWeight={500}>
+                  Časy začiatku
+                </Typography>
+                <Stack direction="row" spacing={2} mt={1} alignItems="center">
+                  <DateTimePicker
+                    label="Nový začiatok"
+                    value={newStartTime}
+                    onChange={setNewStartTime}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!validationErrors.startTime,
+                        helperText: validationErrors.startTime
+                      }
+                    }}
+                  />
+                  <Button variant="contained" onClick={handleAddStartTime}>
+                    Pridať
+                  </Button>
+                </Stack>
 
-          {Object.keys(validationErrors).length > 0 && (
-            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-              Prosím opravte všetky chyby pred odoslaním formulára.
-            </Typography>
-          )}
+                {startTimes.length > 0 && (
+                  <Box mt={2}>
+                    <Stack spacing={1}>
+                      {startTimes.map((time, index) => (
+                        <Stack
+                          key={index}
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          sx={{
+                            bgcolor: theme.palette.action.hover,
+                            px: 2,
+                            py: 1,
+                            borderRadius: 1
+                          }}
+                        >
+                          <Typography>{dayjs(time).format('DD.MM.YYYY HH:mm')}</Typography>
+                          <IconButton onClick={() => handleRemoveStartTime(index)} size="small">
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Color Picker Section */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight={500} mb={1}>
+                  Vyberte farbu
+                </Typography>
+                <SketchPicker color={color} onChangeComplete={(c) => setColor(c.hex)} />
+              </Box>
+            </Stack>
+          </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Zrušiť</Button>
-          <Button onClick={handleSubmit} color="primary">
-            Pridať
+
+        <DialogActions sx={{ px: 4, pb: 3, justifyContent: 'space-between' }}>
+          <Button onClick={onClose} variant="outlined" color="inherit">
+            Zrušiť
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" size="large">
+            Pridať cvičenie
           </Button>
         </DialogActions>
       </Dialog>
