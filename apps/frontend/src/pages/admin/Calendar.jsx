@@ -24,43 +24,44 @@ const Calendar = () => {
       const mappedExercises = exercises
         .map((exercise) => {
           return exercise.startTimes.map((startTime) => {
-            const startDate = moment(exercise._id).set({
-              hour: parseInt(startTime.split(':')[0]),
-              minute: parseInt(startTime.split(':')[1])
-            });
-            const endDate = moment(startDate).add(exercise.duration, 'minutes');
-
+            const startDate = moment(startTime);
+            const endDate = moment(startDate).add(exercise.duration, 'minutes');  
             return {
               title: exercise.name,
               start: startDate.toDate(),
               end: endDate.toDate(),
               allDay: false,
               color: exercise.color || '#00bcd4',
-              description: exercise.description || '' // Assuming there's a description field
+              description: exercise.description || ''
             };
           });
         })
-        .flat();
+        .flat(); 
       setCombinedEvents((prevEvents) => [...prevEvents, ...mappedExercises]);
     }
   }, [exercises]);
+
 
   // Mapovanie eventov do kalendara eventov
   useEffect(() => {
     if (events) {
       const mappedEvents = events.map((event) => {
+        const startDate = moment(event.datefrom); 
+        const endDate = moment(event.dateto); 
         return {
           title: event.name,
-          start: new Date(event.start), // Assuming `start` is a valid date field
-          end: new Date(event.end), // Assuming `end` is a valid date field
+          start: startDate.toDate(),
+          end: endDate.toDate(),
           allDay: false,
-          color: event.color || '#00bcd4', // Assuming `color` is available
-          description: event.description || '' // Assuming `description` is available
+          color: event.published ? '#00bcd4' : '#f44336', 
+          description: ''
         };
       });
+      console.log(mappedEvents); 
       setCombinedEvents((prevEvents) => [...prevEvents, ...mappedEvents]);
     }
   }, [events]);
+  
 
   if (isLoading || isEventsLoading) return <div>Načítavanie...</div>;
   if (isError || isEventsError) return <div>Error načítavania</div>;
