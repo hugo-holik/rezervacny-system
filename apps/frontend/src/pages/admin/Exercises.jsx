@@ -46,9 +46,18 @@ const Exercises = () => {
   };
 
   const userMap = users.reduce((acc, user) => {
-    acc[user._id] = user.name;
+    if (currentUser.role === "zamestnanec") {
+      if (user._id === currentUser._id) {
+        acc[user._id] = user.name;
+      }
+    } else {
+      if (user.role === "zamestnanec") {
+        acc[user._id] = user.name;
+      }
+    }
     return acc;
   }, {});
+  
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'; // Handle undefined dateString
