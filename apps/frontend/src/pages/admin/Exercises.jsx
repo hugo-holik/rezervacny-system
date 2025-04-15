@@ -26,6 +26,8 @@ const Exercises = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
 
+  const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
+
   const onRemoveHandler = async (id) => {
     if (!id) {
       console.error('Error: ID is undefined!');
@@ -46,12 +48,12 @@ const Exercises = () => {
   };
 
   const userMap = users.reduce((acc, user) => {
-    if (currentUser.role === "zamestnanec") {
+    if (currentUser.role === "Zamestnanec UNIZA") {
       if (user._id === currentUser._id) {
         acc[user._id] = user.name;
       }
     } else {
-      if (user.role === "zamestnanec") {
+      if (user.role === "Zamestnanec UNIZA") {
         acc[user._id] = user.name;
       }
     }
@@ -132,6 +134,7 @@ const Exercises = () => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
+          {roleCheck && (
           <Button
             sx={{ m: 1, minWidth: '15rem' }}
             variant="contained"
@@ -140,6 +143,7 @@ const Exercises = () => {
           >
             Pridaj cvičenie
           </Button>
+          )}
         </Grid>
       </Grid>
       <Paper sx={{ mt: 2 }}>
