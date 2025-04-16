@@ -2,10 +2,12 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteExerciseMutation,
   useGetAllExercisesQuery,
-  useGetUsersListQuery
+  useGetUsersListQuery,
+  useGetUserMeQuery
 } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 
 import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -21,6 +23,7 @@ const Exercises = () => {
     refetch // <- this will be used to reload data after update
   } = useGetAllExercisesQuery();
   const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
+  const { data: currentUser = []} = useGetUserMeQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -104,24 +107,40 @@ const Exercises = () => {
       field: 'actions',
       type: 'actions',
       headerName: 'Akcie',
-      getActions: (params) => [
-        <Tooltip key="edit" title="Upraviť cvičenie">
-          <IconButton onClick={() => handleRowClick(params)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>,
-        <ConfirmationDialog
-          key={'delete'}
-          title={`Naozaj chcete odstrániť cvičenie ${params.row.name}?`}
-          onAccept={() => onRemoveHandler(params.row._id)}
-        >
-          <Tooltip title="Odstráň cvičenie">
-            <IconButton>
-              <DeleteIcon />
+      width: 200,
+      getActions: (params) => {
+        const isPrivileged = roleCheck || currentUser.isAdmin;
+
+        const actions = [
+          <Tooltip key="register" title="Prihlasiť sa">
+            <IconButton onClick={() => handleRowClick(params)/* TODO: vymenit za prihlašku*/}>
+              <AppRegistrationIcon />
             </IconButton>
           </Tooltip>
-        </ConfirmationDialog>
-      ]
+        ];
+
+        if (isPrivileged) {
+          actions.unshift( // Add privileged actions at the beginning
+            <Tooltip key="edit" title="Upraviť cvičenie">
+              <IconButton onClick={() => handleRowClick(params)}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>,
+            <ConfirmationDialog
+              key="delete"
+              title={`Naozaj chcete odstrániť cvičenie ${params.row.name}?`}
+              onAccept={() => onRemoveHandler(params.row._id)}
+            >
+              <Tooltip title="Odstráň cvičenie">
+                <IconButton>
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            </ConfirmationDialog>
+          );
+        }
+        return actions;
+      }
     }
   ];
 
@@ -134,7 +153,7 @@ const Exercises = () => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
-          {roleCheck && (
+          {(roleCheck || currentUser.isAdmin) && (
           <Button
             sx={{ m: 1, minWidth: '15rem' }}
             variant="contained"

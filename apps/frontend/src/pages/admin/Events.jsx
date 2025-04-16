@@ -1,34 +1,53 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteEventMutation, useGetAllEventsQuery } from '@app/redux/api';
+import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery } from '@app/redux/api';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@mui/material';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import AddEventModal from './components/AddEventModal';
 import AddExerciseToEventModal from './components/AddExerciseToEventModal';
 import EditEventModal from './components/EditEventModal';
+import ViewEventModal from './components/ViewEventModal';
+
 
 const Events = () => {
   const { data, isLoading } = useGetAllEventsQuery();
+  const { data: currentUser = []} = useGetUserMeQuery();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
   const [deleteEvent] = useDeleteEventMutation();
-  // const [addExerciseToEvent] = useAddExerciseToEventMutation();
 
-  const handleEditClick = (params) => {
-    setSelectedEvent(params.row);
+  const handleEditClick = (event) => {
+    setSelectedEvent(event);
     setOpenEditModal(true);
   };
 
-  const handleAddExerciseClick = (params) => {
-    setSelectedEvent(params.row);
+  const handleAddExerciseClick = (event) => {
+    setSelectedEvent(event);
     setOpenAddExerciseModal(true);
+  };
+
+  const handleViewEvent = (event) => {
+    setSelectedEvent(event);
+    setOpenViewModal(true);
   };
 
   const handleDeleteEvent = (eventId) => {
@@ -51,96 +70,65 @@ const Events = () => {
     return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${hours}:${minutes}`;
   };
 
-  const columns = [
-    {
-      field: 'name',
-      headerName: 'Názov',
-      flex: 1
-    },
-    {
-      field: 'datefrom',
-      headerName: 'Dátum od',
-      flex: 1,
-      valueFormatter: (params) => formatDate(params)
-    },
-    {
-      field: 'dateto',
-      headerName: 'Dátum do',
-      flex: 1,
-      valueFormatter: (params) => formatDate(params)
-    },
-    {
-      field: 'dateClosing',
-      headerName: 'Deadline',
-      flex: 1,
-      valueFormatter: (params) => formatDate(params)
-    },
-    {
-      field: 'actions',
-      headerName: 'Akcie',
-      type: 'actions',
-      minWidth: 150,
-      getActions: (params) => [
-        <Tooltip key="edit" title="Upraviť udalosť">
-          <IconButton onClick={() => handleEditClick(params)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>,
-        <Tooltip key="add" title="Pridať cvičenie">
-          <IconButton onClick={() => handleAddExerciseClick(params)}>
-            <AddIcon />
-          </IconButton>
-        </Tooltip>,
-        <ConfirmationDialog
-          key="delete"
-          title={`Naozaj chcete odstrániť udalosť ${params.row.name}?`}
-          onAccept={() => handleDeleteEvent(params.row._id)}
-        >
-          <Tooltip title="Odstrániť">
-            <IconButton>
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </ConfirmationDialog>
-      ]
-    }
-  ];
-
   return (
     <Box py={2}>
-      <Grid py={1} px={1} container spacing={1}>
-        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
-          <Typography variant="h4" alignSelf={'center'}>
-            Špeciálne cvičenia
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
-          <Button variant="contained" onClick={() => setOpenAddModal(true)}>
-            Pridaj udalosť
-          </Button>
-        </Grid>
+      <Grid container justifyContent="space-between" alignItems="center" px={1}>
+        <Typography variant="h4">Špeciálne cvičenia</Typography>
+        {(roleCheck || currentUser.isAdmin) && (
+        <Button variant="contained" onClick={() => setOpenAddModal(true)}>
+          Pridaj udalosť
+        </Button>
+        )}
       </Grid>
 
-      <Paper sx={{ mt: 2 }}>
-        <DataGrid
-          loading={isLoading}
-          rows={data || []}
-          columns={columns}
-          getRowId={(row) => row._id}
-          slots={{ toolbar: GridToolbar }}
-          slotProps={{ toolbar: { showQuickFilter: true } }}
-          pageSizeOptions={[10, 20, 50]}
-          initialState={{
-            density: 'compact',
-            pagination: {
-              paginationModel: {
-                pageSize: 10
-              }
-            }
-          }}
-          isRowSelectable={() => false}
-        />
-      </Paper>
+      <Grid container spacing={2} mt={2}>
+        {isLoading ? (
+          <Typography>Načítavam...</Typography>
+        ) : (
+          data?.map((event) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={event._id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} onClick={() => handleViewEvent(event)}>
+                <CardHeader title={event.name} />
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="body2">
+                    <strong>Od:</strong> {formatDate(event.datefrom)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Do:</strong> {formatDate(event.dateto)}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Deadline:</strong> {formatDate(event.dateClosing)}
+                  </Typography>
+                </CardContent>
+                {(roleCheck || currentUser.isAdmin) && (
+                <CardActions onClick={(e)=> e.stopPropagation()}>
+                  <Tooltip title="Upraviť udalosť">
+                    <IconButton onClick={() => handleEditClick(event)}>
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Pridať cvičenie">
+                    <IconButton onClick={() => handleAddExerciseClick(event)}>
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <ConfirmationDialog
+                    title={`Naozaj chcete odstrániť udalosť ${event.name}?`}
+                    onAccept={() => handleDeleteEvent(event._id)}
+                  >
+                    <Tooltip title="Odstrániť">
+                      <IconButton>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </ConfirmationDialog>
+                </CardActions>
+                )}
+              </Card>
+            </Grid>
+          ))
+        )}
+      </Grid>
 
       <AddEventModal open={openAddModal} onClose={() => setOpenAddModal(false)} />
       <EditEventModal
@@ -152,6 +140,11 @@ const Events = () => {
         open={openAddExerciseModal}
         onClose={() => setOpenAddExerciseModal(false)}
         eventData={selectedEvent}
+      />
+      <ViewEventModal
+      open={openViewModal}
+      onClose={() => setOpenViewModal(false)}
+      eventData={selectedEvent}
       />
     </Box>
   );
