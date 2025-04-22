@@ -99,6 +99,11 @@ const Events = () => {
                   <Typography variant="body2">
                     <strong>Deadline:</strong> {formatDate(event.dateClosing)}
                   </Typography>
+                  {(roleCheck || currentUser.isAdmin) && (
+                  <Typography variant="body2">
+                    <strong>Status:</strong> {event.published ? 'Publikované' : 'Nepublikované'}
+                  </Typography>
+                  )}
                 </CardContent>
                 {(roleCheck || currentUser.isAdmin) && (
                 <CardActions onClick={(e)=> e.stopPropagation()}>

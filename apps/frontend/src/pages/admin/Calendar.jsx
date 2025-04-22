@@ -78,7 +78,9 @@ const Calendar = () => {
   // Map events
   useEffect(() => {
     if (events) {
-      const mappedEvents = events.map((event) => {
+      const mappedEvents = events
+      .filter(event => event.published)
+      .map((event) => {
         const start = moment(event.datefrom);
         const end = moment(event.dateto);
         return {

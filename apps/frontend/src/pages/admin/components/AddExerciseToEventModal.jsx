@@ -1,4 +1,3 @@
-import { useAddExerciseToEventMutation, useGetAllExercisesQuery } from '@app/redux/api';
 import {
   Button,
   Dialog,
@@ -11,21 +10,22 @@ import {
   Select,
   TextField
 } from '@mui/material';
-import PropTypes from 'prop-types'; // ✅ Import PropTypes
+import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { useAddEventExerciseMutation, useGetAllExercisesQuery } from '@app/redux/api';
 
 const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [exerciseId, setExerciseId] = useState('');
   const [note, setNote] = useState('');
-  const [addExerciseToEvent] = useAddExerciseToEventMutation();
+  const [addEventExercise] = useAddEventExerciseMutation();
   const { data: exercises = [] } = useGetAllExercisesQuery();
 
   if (!eventData) return null;
 
-  const eventStart = new Date(eventData?.datefrom);
-  const eventEnd = new Date(eventData?.dateto);
+  const eventStart = new Date(eventData.datefrom);
+  const eventEnd = new Date(eventData.dateto);
   eventEnd.setHours(23, 59, 59, 999);
 
   const filteredExercises = exercises.filter((exercise) => {
@@ -51,14 +51,12 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
 
   const handleSubmit = async () => {
     try {
-      await addExerciseToEvent({
-        eventId: eventData._id,
-        newExercise: {
-          date,
-          startTime,
-          exercise: exerciseId,
-          note
-        }
+      await addEventExercise({
+        Id: eventData._id,
+        date,
+        startTime,
+        exerciseId,
+        note
       }).unwrap();
 
       onClose();
@@ -126,7 +124,6 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   );
 };
 
-// ✅ Add PropTypes for the component
 AddExerciseToEventModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
