@@ -21,12 +21,12 @@ const ViewEventModal = ({ open, onClose, eventData }) => {
         </Typography>
 
         <Typography variant="h6">Zoznam cvičení:</Typography>
-        {eventData.exercises?.length ? (
+        {eventData.openExercises?.length ? (
           <List dense>
-            {eventData.exercises.map((exercise, index) => (
+            {eventData.openExercises.map((exercise, index) => (
               <ListItem key={exercise._id || index}>
                 <ListItemText
-                  primary={`${exercise.date} – ${exercise.startTime}`}
+                  primary={`${new Date(exercise.date).toLocaleDateString()} – ${exercise.startTime}`}
                   secondary={`Stav: ${exercise.status}`}
                 />
               </ListItem>
