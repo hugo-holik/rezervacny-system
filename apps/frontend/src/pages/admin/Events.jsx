@@ -3,6 +3,7 @@ import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery } from 
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import PublishIcon from '@mui/icons-material/Publish';
 import {
   Box,
   Button,
@@ -10,8 +11,10 @@ import {
   CardActions,
   CardContent,
   CardHeader,
+  FormControlLabel,
   Grid,
   IconButton,
+  Switch,
   Tooltip,
   Typography
 } from '@mui/material';
@@ -49,6 +52,11 @@ const Events = () => {
     setSelectedEvent(event);
     setOpenViewModal(true);
   };
+
+  //TODO: pridat API ked bude rdy
+  const handleTogglePublished = async (event) => {
+  };
+  
 
   const handleDeleteEvent = (eventId) => {
     deleteEvent(eventId)
@@ -127,6 +135,18 @@ const Events = () => {
                       </IconButton>
                     </Tooltip>
                   </ConfirmationDialog>
+                  <Tooltip title={event.published ? 'Odzverejniť' : 'Zverejniť'}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={event.published}
+                          onChange={() => handleTogglePublished(event)}
+                          color="success"
+                        />
+                      }
+                      label={event.published ? 'Odzverejniť' : 'Zverejniť'}
+                    />
+                  </Tooltip>
                 </CardActions>
                 )}
               </Card>
