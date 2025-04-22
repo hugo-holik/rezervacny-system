@@ -23,6 +23,29 @@ export const api = createApi({
         method: 'GET'
       })
     }),
+    changeUserPassword: builder.mutation({
+      query: (data) => ({
+        url: '/user/change-password',
+        method: 'PUT',
+        body: { password: data.password }
+      }),
+      transformErrorResponse: (response) => {
+        // Handle array of errors or single error message
+        if (response.data?.errors) {
+          return {
+            messages: response.data.errors.map(err => err.message),
+            fields: response.data.errors.reduce((acc, err) => {
+              acc[err.path] = err.message;
+              return acc;
+            }, {})
+          };
+        }
+        return {
+          messages: [response.data?.message || 'Password change failed'],
+          fields: {}
+        };
+      }
+    }),
     loginUser: builder.mutation({
       query: (data) => ({
         url: '/public/signin',
@@ -46,6 +69,7 @@ export const api = createApi({
       }),
       invalidatesTags: (result) => (result ? ['Users'] : [])
     }),
+
     removeUser: builder.mutation({
       query: (userId) => ({
         url: `/admin/user/${userId}`,
@@ -237,5 +261,6 @@ export const {
   useDeleteEventExerciseMutation,
   useUpdateAttendeeStatusMutation,
   useAddExerciseToEventMutation,
+  useChangeUserPasswordMutation,
   useSendApplicationMutation
 } = api;

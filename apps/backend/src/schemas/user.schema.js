@@ -78,7 +78,32 @@ const updateUserSchema = Joi.object({
   }),
 });
 
+const changePasswordSchema = Joi.object({
+  password: Joi.string()
+    .pattern(/[0-9]/)
+    .message('validation.password_must_contain_number')
+    .pattern(/[a-z]/)
+    .message('validation.password_must_contain_lowercase')
+    .pattern(/[A-Z]/)
+    .message('validation.password_must_contain_uppercase')
+    .min(8)
+    .required()
+    .messages({
+      'string.empty': 'validation.empty_password',
+      'string.min': 'validation.password_must_contain_min_char'
+    }),
+
+  password_repeat: Joi.any()
+    .valid(Joi.ref('password'))
+    .required()
+    .messages({
+      'any.only': 'validation.passwords_not_match',
+      'any.required': 'validation.empty_password'
+    })
+});
+
 module.exports = {
   createUserShema,
   updateUserSchema,
+  changePasswordSchema,
 };
