@@ -3,7 +3,6 @@ import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery } from 
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import PublishIcon from '@mui/icons-material/Publish';
 import {
   Box,
   Button,
@@ -25,10 +24,9 @@ import AddExerciseToEventModal from './components/AddExerciseToEventModal';
 import EditEventModal from './components/EditEventModal';
 import ViewEventModal from './components/ViewEventModal';
 
-
 const Events = () => {
   const { data, isLoading } = useGetAllEventsQuery();
-  const { data: currentUser = []} = useGetUserMeQuery();
+  const { data: currentUser = [] } = useGetUserMeQuery();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
@@ -54,9 +52,7 @@ const Events = () => {
   };
 
   //TODO: pridat API ked bude rdy
-  const handleTogglePublished = async (event) => {
-  };
-  
+  const handleTogglePublished = async () => {};
 
   const handleDeleteEvent = (eventId) => {
     deleteEvent(eventId)
@@ -73,9 +69,7 @@ const Events = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const pad = (n) => String(n).padStart(2, '0');
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${hours}:${minutes}`;
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
   };
 
   return (
@@ -83,9 +77,9 @@ const Events = () => {
       <Grid container justifyContent="space-between" alignItems="center" px={1}>
         <Typography variant="h4">Špeciálne cvičenia</Typography>
         {(roleCheck || currentUser.isAdmin) && (
-        <Button variant="contained" onClick={() => setOpenAddModal(true)}>
-          Pridaj udalosť
-        </Button>
+          <Button variant="contained" onClick={() => setOpenAddModal(true)}>
+            Pridaj udalosť
+          </Button>
         )}
       </Grid>
 
@@ -95,7 +89,10 @@ const Events = () => {
         ) : (
           data?.map((event) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={event._id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} onClick={() => handleViewEvent(event)}>
+              <Card
+                sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                onClick={() => handleViewEvent(event)}
+              >
                 <CardHeader title={event.name} />
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography variant="body2">
@@ -108,46 +105,46 @@ const Events = () => {
                     <strong>Deadline:</strong> {formatDate(event.dateClosing)}
                   </Typography>
                   {(roleCheck || currentUser.isAdmin) && (
-                  <Typography variant="body2">
-                    <strong>Status:</strong> {event.published ? 'Publikované' : 'Nepublikované'}
-                  </Typography>
+                    <Typography variant="body2">
+                      <strong>Status:</strong> {event.published ? 'Publikované' : 'Nepublikované'}
+                    </Typography>
                   )}
                 </CardContent>
                 {(roleCheck || currentUser.isAdmin) && (
-                <CardActions onClick={(e)=> e.stopPropagation()}>
-                  <Tooltip title="Upraviť udalosť">
-                    <IconButton onClick={() => handleEditClick(event)}>
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Pridať cvičenie">
-                    <IconButton onClick={() => handleAddExerciseClick(event)}>
-                      <AddIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <ConfirmationDialog
-                    title={`Naozaj chcete odstrániť udalosť ${event.name}?`}
-                    onAccept={() => handleDeleteEvent(event._id)}
-                  >
-                    <Tooltip title="Odstrániť">
-                      <IconButton>
-                        <DeleteIcon />
+                  <CardActions onClick={(e) => e.stopPropagation()}>
+                    <Tooltip title="Upraviť udalosť">
+                      <IconButton onClick={() => handleEditClick(event)}>
+                        <EditIcon />
                       </IconButton>
                     </Tooltip>
-                  </ConfirmationDialog>
-                  <Tooltip title={event.published ? 'Odzverejniť' : 'Zverejniť'}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={event.published}
-                          onChange={() => handleTogglePublished(event)}
-                          color="success"
-                        />
-                      }
-                      label={event.published ? 'Odzverejniť' : 'Zverejniť'}
-                    />
-                  </Tooltip>
-                </CardActions>
+                    <Tooltip title="Pridať cvičenie">
+                      <IconButton onClick={() => handleAddExerciseClick(event)}>
+                        <AddIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <ConfirmationDialog
+                      title={`Naozaj chcete odstrániť udalosť ${event.name}?`}
+                      onAccept={() => handleDeleteEvent(event._id)}
+                    >
+                      <Tooltip title="Odstrániť">
+                        <IconButton>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </ConfirmationDialog>
+                    <Tooltip title={event.published ? 'Odzverejniť' : 'Zverejniť'}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={event.published}
+                            onChange={() => handleTogglePublished(event)}
+                            color="success"
+                          />
+                        }
+                        label={event.published ? 'Odzverejniť' : 'Zverejniť'}
+                      />
+                    </Tooltip>
+                  </CardActions>
                 )}
               </Card>
             </Grid>
@@ -167,9 +164,9 @@ const Events = () => {
         eventData={selectedEvent}
       />
       <ViewEventModal
-      open={openViewModal}
-      onClose={() => setOpenViewModal(false)}
-      eventData={selectedEvent}
+        open={openViewModal}
+        onClose={() => setOpenViewModal(false)}
+        eventData={selectedEvent}
       />
     </Box>
   );
