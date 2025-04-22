@@ -2,12 +2,12 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteExerciseMutation,
   useGetAllExercisesQuery,
-  useGetUsersListQuery,
-  useGetUserMeQuery
+  useGetUserMeQuery,
+  useGetUsersListQuery
 } from '@app/redux/api';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 
 import { Box, Button, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
@@ -23,7 +23,7 @@ const Exercises = () => {
     refetch // <- this will be used to reload data after update
   } = useGetAllExercisesQuery();
   const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
-  const { data: currentUser = []} = useGetUserMeQuery();
+  const { data: currentUser = [] } = useGetUserMeQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -51,25 +51,24 @@ const Exercises = () => {
   };
 
   const userMap = users.reduce((acc, user) => {
-    if (currentUser.role === "Zamestnanec UNIZA") {
+    if (currentUser.role === 'Zamestnanec UNIZA') {
       if (user._id === currentUser._id) {
         acc[user._id] = user.name;
       }
     } else {
-      if (user.role === "Zamestnanec UNIZA") {
+      if (user.role === 'Zamestnanec UNIZA') {
         acc[user._id] = user.name;
       }
     }
     return acc;
   }, {});
-  
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'; // Handle undefined dateString
 
     const date = new Date(dateString);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   const columns = [
@@ -113,14 +112,15 @@ const Exercises = () => {
 
         const actions = [
           <Tooltip key="register" title="Prihlasiť sa">
-            <IconButton onClick={() => handleRowClick(params)/* TODO: vymenit za prihlašku*/}>
+            <IconButton onClick={() => handleRowClick(params) /* TODO: vymenit za prihlašku*/}>
               <AppRegistrationIcon />
             </IconButton>
           </Tooltip>
         ];
 
         if (isPrivileged) {
-          actions.unshift( // Add privileged actions at the beginning
+          actions.unshift(
+            // Add privileged actions at the beginning
             <Tooltip key="edit" title="Upraviť cvičenie">
               <IconButton onClick={() => handleRowClick(params)}>
                 <EditIcon />
@@ -154,14 +154,14 @@ const Exercises = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
           {(roleCheck || currentUser.isAdmin) && (
-          <Button
-            sx={{ m: 1, minWidth: '15rem' }}
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenAddModal(true)}
-          >
-            Pridaj cvičenie
-          </Button>
+            <Button
+              sx={{ m: 1, minWidth: '15rem' }}
+              variant="contained"
+              color="primary"
+              onClick={() => setOpenAddModal(true)}
+            >
+              Pridaj cvičenie
+            </Button>
           )}
         </Grid>
       </Grid>
