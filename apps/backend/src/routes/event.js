@@ -8,6 +8,7 @@ const {
   addExcercise,
   editExercise,
   removeExercise,
+  sendApplication,
   updateAttendeeStatus,
 } = require("../controllers/eventController");
 
@@ -24,6 +25,9 @@ router.delete("/:id", remove);
 router.post("/addExercise/:id", addExcercise);
 router.put("/editExercise/:eventId/:exerciseId", editExercise);
 router.delete("/removeExercise/:eventId/:exerciseId", removeExercise);
+
+// applications (prihlasovanie na otvorene cvicenia)
+router.post("/sendApplication/:eventId/:exerciseId", sendApplication);
 
 // Aktualizácia stavu účastníka v cvičení
 router.put("/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", updateAttendeeStatus);

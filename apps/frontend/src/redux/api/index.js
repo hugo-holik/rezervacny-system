@@ -99,7 +99,6 @@ export const api = createApi({
       }),
       invalidatesTags: ['ExternalSchools']
     }),
-
     getAllExercises: builder.query({
       query: (data) => ({
         url: '/exercise',
@@ -131,7 +130,6 @@ export const api = createApi({
       }),
       invalidatesTags: ['Exercise']
     }),
-
     getAllEvents: builder.query({
       query: (data) => ({
         url: '/event',
@@ -171,7 +169,6 @@ export const api = createApi({
       }),
       invalidatesTags: ['Events']
     }),
-
     addEventExercise: builder.mutation({
       query: ({ Id, ...data }) => ({
         url: `/event/addExercise/${Id}`,
@@ -195,7 +192,6 @@ export const api = createApi({
       }),
       invalidatesTags: ['Events']
     }),
-
     updateAttendeeStatus: builder.mutation({
       query: ({ eventId, exerciseId, attendeeId, status }) => ({
         url: `/event/updateAttendeeStatus/${eventId}/${exerciseId}/${attendeeId}`,
@@ -203,14 +199,14 @@ export const api = createApi({
         body: { status },
       }),
     }),
-    addExerciseToEvent: builder.mutation({
-      query: ({ eventId, newExercise }) => ({
-        url: `/event/addExercise/${eventId}`,
+    sendApplication: builder.mutation({
+      query: ({ eventId, exerciseId, ...data }) => ({
+        url: `/event/sendApplication/${eventId}/${exerciseId}`,
         method: 'POST',
-        body: newExercise,
+        body: data
       }),
-      invalidatesTags: ['Events'],
-    })
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
   })
 });
 
@@ -240,5 +236,6 @@ export const {
   useEditEventExerciseMutation,
   useDeleteEventExerciseMutation,
   useUpdateAttendeeStatusMutation,
-  useAddExerciseToEventMutation
+  useAddExerciseToEventMutation,
+  useSendApplicationMutation
 } = api;

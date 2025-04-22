@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const APPROVAL_STATUS_ENUM = Object.freeze({
+  PENDING: "čaká na schválenie",
+  APPROVED: "schválené",
+  REJECTED: "zamietnuté"
+});
+
 const EventSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -27,8 +33,8 @@ const EventSchema = new mongoose.Schema(
             numOfAttendees: { type: Number, required: true },
             approvalStatus: { 
               type: String ,
-              enum: ["čaká na schválenie", "schválené", "zamietnuté"],
-              default: "čaká na schválenie",
+              enum: Object.values(APPROVAL_STATUS_ENUM),
+              default: APPROVAL_STATUS_ENUM.PENDING,
             },
             createdAt: { type: Date, default: Date.now },
             approvedAt: { type: Date },
@@ -36,8 +42,8 @@ const EventSchema = new mongoose.Schema(
         ],
         status: { 
           type: String,
-          enum: ["čaká na schválenie", "schválené", "zamietnuté"],
-          default: "čaká na schválenie" ,
+          enum: Object.values(APPROVAL_STATUS_ENUM),
+          default: APPROVAL_STATUS_ENUM.PENDING,
         },
         note: { type: String, required: false },
       },
@@ -46,4 +52,7 @@ const EventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Event", EventSchema);
+module.exports = {
+  Event: mongoose.model("Event", EventSchema),
+  APPROVAL_STATUS_ENUM
+};

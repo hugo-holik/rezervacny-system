@@ -61,7 +61,14 @@ const editEventSchema = Joi.object({
     ).optional()
 }).unknown(false); // Disallow unknown keys
 
+const sendApplicationSchema = Joi.object({
+    numOfAttendees: Joi.number().required().messages({
+        "number.empty": "numOfAttendees is required"
+    })
+}).unknown(false); // Disallow unknown keys
+
 module.exports = {
     createEventSchema,
     editEventSchema,
+    sendApplicationSchema
 };

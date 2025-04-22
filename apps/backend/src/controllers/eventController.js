@@ -1,9 +1,10 @@
 const { throwError, errorFormatter } = require("../util/universal");
 const { body, validationResult, matchedData } = require("express-validator");
-
-const Event = require("../models/event");
+const { Event, APPROVAL_STATUS_ENUM } = require("../models/event");
 const Exercise = require("../models/exercise");
 const User = require("../models/user");
+const { validate, validated } = require("../util/validation");
+const { sendApplicationSchema } = require("../schemas/event.schema");
 
 exports.get = async (req, res) => {
   try {
@@ -135,7 +136,7 @@ exports.addExcercise = async (req, res) => {
     exerciseName,
     exercise: req.body.exercise,
     attendees: [],
-    status: req.body.status || "čaká na schválenie",
+    status: req.body.status || APPROVAL_STATUS_ENUM,
     note: req.body.note || "",
   };
 
@@ -247,4 +248,82 @@ exports.addExcercise = async (req, res) => {
     throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
   }
   };  
+
+  exports.sendApplication = [
+    validate(sendApplicationSchema),
+    async (req, res) => {
+      const { eventId, exerciseId } = req.params;
+      const requestedAttendees = validated(req).numOfAttendees;
+
+      const eventRecord = await Event.findOne({ _id: eventId });
+      if (!eventRecord) {
+        return res.status(404).send();
+      }
+    
+      const openExerciseRecord = eventRecord.openExercises.find(
+        (exercise) => exercise._id.toString() === exerciseId
+      );
+      if (!openExerciseRecord) {
+        return res.status(404).send();
+      }
+    
+      if (openExerciseRecord.status !== APPROVAL_STATUS_ENUM.APPROVED) {
+        return res.status(400).json({
+          error: "Nemôžete sa prihlásiť na cvičenie, pretože cvičenie nie je schválené.",
+        });
+      }
+    
+      const exerciseRecord = await Exercise.findOne({
+        _id: openExerciseRecord.exercise.toString(),
+      });
+      if (!exerciseRecord) {
+        return res.status(404).send();
+      }
+
+      const applicationAlreadyExists = openExerciseRecord.attendees
+        .some(attendee => attendee.teacher.toString() === req.user.user_id.toString());
+      if (applicationAlreadyExists) {
+        return res.status(400).json({
+          error: "Už ste na dané cvičenie prihlásení.",
+        });
+      }
+    
+      const maxAttendees = exerciseRecord.maxAttendees;
+    
+      const totalAttendees = openExerciseRecord.attendees.reduce(
+        (total, attendee) => total + attendee.numOfAttendees,
+        0
+      );
+    
+      if (
+        requestedAttendees > maxAttendees ||
+        totalAttendees + requestedAttendees > maxAttendees
+      ) {
+        return res.status(404).json({
+          error: "Zadaný počet účastníkov prekračuje maximálnu kapacitu.",
+        });
+      }
+      
+      const newApplication = {
+        teacher: req.user.user_id,
+        numOfAttendees: requestedAttendees,
+        approvalStatus: APPROVAL_STATUS_ENUM.PENDING,
+        createdAt: new Date(),
+        approvedAt: null,
+      };
+    
+      if (!openExerciseRecord.attendees) {
+        openExerciseRecord.attendees = [];
+      }
+      
+      openExerciseRecord.attendees.push(newApplication);
+
+      try {
+        await eventRecord.save();
+        res.status(200).send({ message: "Application created" });
+      } catch (err) {
+        throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+      }
+    }
+  ];  
   
