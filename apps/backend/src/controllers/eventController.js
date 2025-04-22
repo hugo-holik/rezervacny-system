@@ -118,7 +118,7 @@ exports.addExcercise = async (req, res) => {
   const existingExercise = eventRecord.openExercises.find((ex) => {
     let bodyDate = new Date(req.body.date).getTime();
     let exDate = new Date(ex.date).getTime();
-    return exDate === bodyDate && ex.startTime === req.body.startTime && ex.exercise.toString() === req.body._id.toString();
+    return exDate === bodyDate && ex.startTime === req.body.startTime && ex.exercise.toString() === req.body.exercise.toString();
   });
 
   if (existingExercise) {
@@ -130,13 +130,14 @@ exports.addExcercise = async (req, res) => {
     return res.status(404).send();
   }
 
+  
   const newExercise = {
     date: req.body.date,
     startTime: req.body.startTime,
     exerciseName,
     exercise: req.body.exercise,
     attendees: [],
-    status: req.body.status || APPROVAL_STATUS_ENUM,
+    status: req.body.status || APPROVAL_STATUS_ENUM.PENDING,
     note: req.body.note || "",
   };
 
