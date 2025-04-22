@@ -90,7 +90,16 @@ const Events = () => {
           data?.map((event) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={event._id}>
               <Card
-                sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                  '&:hover': {
+                    transform: 'scale(1.005)'
+                  }
+                }}
                 onClick={() => handleViewEvent(event)}
               >
                 <CardHeader title={event.name} />

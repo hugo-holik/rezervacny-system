@@ -9,6 +9,10 @@ import {
 } from '@mui/material';
 import PropTypes from 'prop-types';
 
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('sk-SK'); // adjust locale if needed
+};
+
 const ViewEventModal = ({ open, onClose, eventData }) => {
   if (!eventData) return null;
 
@@ -17,8 +21,7 @@ const ViewEventModal = ({ open, onClose, eventData }) => {
       <DialogTitle>Detail udalosti: {eventData.name}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" mb={2}>
-          <strong>Termín:</strong> {new Date(eventData.datefrom).toLocaleString()} –{' '}
-          {new Date(eventData.dateto).toLocaleString()}
+          <strong>Termín:</strong> {formatDate(eventData.datefrom)} – {formatDate(eventData.dateto)}
         </Typography>
 
         <Typography variant="h6">Zoznam cvičení:</Typography>
@@ -27,7 +30,7 @@ const ViewEventModal = ({ open, onClose, eventData }) => {
             {eventData.openExercises.map((exercise, index) => (
               <ListItem key={exercise._id || index}>
                 <ListItemText
-                  primary={`${new Date(exercise.date).toLocaleDateString()} – ${exercise.startTime}`}
+                  primary={`${formatDate(exercise.date)} – ${exercise.startTime}`}
                   secondary={`Stav: ${exercise.status}`}
                 />
               </ListItem>
