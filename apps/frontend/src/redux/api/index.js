@@ -207,6 +207,14 @@ export const api = createApi({
       }),
       invalidatesTags: (result) => (result ? ['Events'] : [])
     }),
+    getApplications: builder.query({
+      query: (data) => ({
+        url: '/event/getApplications',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    })
   })
 });
 
@@ -237,5 +245,6 @@ export const {
   useDeleteEventExerciseMutation,
   useUpdateAttendeeStatusMutation,
   useAddExerciseToEventMutation,
-  useSendApplicationMutation
+  useSendApplicationMutation,
+  useGetApplicationsQuery
 } = api;
