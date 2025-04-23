@@ -1,103 +1,122 @@
-import * as authService from '@app/pages/auth/authService';
-import { useGetUserMeQuery, useUpdateUserMutation } from '@app/redux/api';
+import { useChangeUserPasswordMutation, useGetUserMeQuery } from '@app/redux/api';
 import { Box, Button, Card, Container, TextField, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const MyAccount = () => {
-  // Fetch the current user from the API
   const { data: user, isLoading: isUserLoading } = useGetUserMeQuery();
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const [changeUserPassword, { isLoading: isPasswordChanging }] = useChangeUserPasswordMutation();
 
-  // State for form data
   const [formData, setFormData] = useState({
-    name: '',
-    password: ''
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
-  // Set form data when user is loaded
-  useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        name: user.name || ''
-      }));
-    }
-  }, [user]);
+  const [errors, setErrors] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user types
+    setErrors({ ...errors, [e.target.name]: '' });
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+    setErrors({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
 
-    if (!user) {
-      toast.error('Chyba: Nie je možné načítať používateľa.');
+    // Frontend validation
+    if (formData.newPassword !== formData.confirmPassword) {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword: 'Passwords do not match'
+      }));
       return;
     }
 
-    const updatedData = {
-      name: formData.name,
-      surname: user.surname, // Required but not editable
-      email: user.email, // Required but not editable
-      role: user.role, // Required but not editable
-      isAdmin: user.isAdmin, // Required but not editable
-      isActive: user.isActive, // Required but not editable
-      ...(formData.password && { password: formData.password }) // Include password only if provided
-    };
-    console.log('Updated data:', updatedData);
     try {
-      const response = await updateUser({
-        userId: user._id,
-        data: updatedData
+      await changeUserPassword({
+        password: formData.newPassword
       }).unwrap();
 
-      // Update local storage with new name
-      const updatedUser = { ...user, name: response.name };
-      authService.saveUserToStorage(updatedUser);
-
-      toast.success('Údaje boli úspešne aktualizované');
+      toast.success('Password changed successfully!');
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
     } catch (error) {
-      toast.error('Chyba pri aktualizácii: ' + (error?.data?.message || 'Neznáma chyba'));
+      if (error.data?.fields) {
+        // Handle field-specific errors
+        setErrors(error.data.fields);
+      }
+
+      // Show all error messages
+      const errorMessages = error.data?.messages || ['Failed to change password'];
+      errorMessages.forEach((msg) => toast.error(msg));
     }
   };
 
   if (isUserLoading) {
-    return <Typography>Načítava sa...</Typography>;
+    return <Typography>Loading...</Typography>;
   }
 
   return (
     <Container component="main" maxWidth="sm">
       <Typography align="center" sx={{ mt: '10%' }} variant="h4">
-        Môj účet
+        My Account
       </Typography>
       <Card sx={{ mt: '10%', p: 3 }}>
-        <Box component="form" onSubmit={handleSubmit}>
+        <Typography variant="h6" align="center" gutterBottom>
+          Change Password
+        </Typography>
+        <Box component="form" onSubmit={handlePasswordSubmit}>
           <TextField
-            label="Meno"
-            name="name"
-            fullWidth
-            variant="outlined"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Nové heslo"
-            name="password"
+            label="Current Password"
+            name="currentPassword"
             type="password"
             fullWidth
             variant="outlined"
-            value={formData.password}
+            value={formData.currentPassword}
             onChange={handleChange}
+            error={!!errors.currentPassword}
+            helperText={errors.currentPassword}
             sx={{ mb: 2 }}
           />
-          <Button type="submit" variant="contained" fullWidth disabled={isUpdating}>
-            Aktualizovať údaje
+          <TextField
+            label="New Password"
+            name="newPassword"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={formData.newPassword}
+            onChange={handleChange}
+            error={!!errors.newPassword}
+            helperText={errors.newPassword}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Confirm New Password"
+            name="confirmPassword"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword}
+            sx={{ mb: 2 }}
+          />
+          <Button type="submit" variant="contained" fullWidth disabled={isPasswordChanging}>
+            {isPasswordChanging ? 'Changing password...' : 'Change Password'}
           </Button>
         </Box>
       </Card>

@@ -3,7 +3,7 @@ const { throwError, errorFormatter } = require("../util/universal");
 
 const User = require("../models/user");
 const { validate, validated } = require("../util/validation");
-const { editUserSchema } = require("../schemas/user.schema");
+const { updateUserSchema, changePasswordSchema } = require("../schemas/user.schema");
 
 exports.SignOut = [
   async (req, res) => {
@@ -39,7 +39,7 @@ exports.getCurrentUser = [
 ];
 
 exports.edit = [
-  validate(editUserSchema),
+  validate(updateUserSchema),
   async (req, res) => {
     const matched = validated(req);
     const user = await User.findOne({ _id: req.user.user_id });
@@ -62,48 +62,34 @@ exports.edit = [
   },
 ];
 
-exports.changePassword = [
-  body("password").not().isEmpty().withMessage("validation.empty_password"),
-  body("password_repeat")
-    .not()
-    .isEmpty()
-    .withMessage("validation.empty_password"),
-  body("password")
-    .matches(/[0-9]/)
-    .withMessage("validation.password_must_contain_number"),
-  body("password")
-    .matches(/[a-z]/)
-    .withMessage("validation.password_must_contain_lowercase"),
-  body("password")
-    .matches(/[A-Z]/)
-    .withMessage("validation.password_must_contain_uppercase"),
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage("validation.password_must_contain_min_char"),
+exports.changePassword = async (req, res) => {
+  const { error } = changePasswordSchema.validate(req.body, { abortEarly: false });
 
-  async (req, res) => {
-    throwError(
-      req.t("messages.passwordChange"),
-      400,
-      validationResult(req).formatWith(errorFormatter)
-    );
-    const { password, password_repeat } = req.body;
-    if (password !== password_repeat) {
-      throwError(req.t("validation.passwords_not_match"), 400);
-    }
-    if (req.user.user_id) {
-      try {
-        const user = await User.findOne({ _id: req.user.user_id });
-        if (user) {
-          user.setPassword(password);
-          await user.save();
-          res
-            .status(200)
-            .send({ message: req.t("messages.password_change_success") });
-        }
-      } catch (err) {
-        throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+  if (error) {
+    return res.status(400).json({
+      errors: error.details.map(err => ({
+        message: err.message,
+        field: err.path[0]
+      }))
+    });
+  }
+
+  const { password } = req.body;
+
+  if (req.user.user_id) {
+    try {
+      const user = await User.findOne({ _id: req.user.user_id });
+      if (user) {
+        user.setPassword(password);
+        await user.save();
+        return res.status(200).send({ message: req.t("messages.password_change_success") });
+      } else {
+        return throwError(req.t("messages.user_not_found"), 404);
       }
+    } catch (err) {
+      return throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
     }
-  },
-];
+  } else {
+    return throwError(req.t("messages.invalid_user"), 400);
+  }
+};
