@@ -18,22 +18,22 @@ import {
   Typography
 } from '@mui/material';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AddEventModal from './components/AddEventModal';
 import AddExerciseToEventModal from './components/AddExerciseToEventModal';
 import EditEventModal from './components/EditEventModal';
-import {useNavigate} from 'react-router-dom';
 
 const Events = () => {
-  const { data, isLoading } = useGetAllEventsQuery();
+  const { data: events, isLoading } = useGetAllEventsQuery();
   const { data: currentUser = [] } = useGetUserMeQuery();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
   const navigate = useNavigate();
 
+  const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
   const [deleteEvent] = useDeleteEventMutation();
 
   const handleEditClick = (event) => {
@@ -50,8 +50,9 @@ const Events = () => {
     navigate(`/events/${event._id}`);
   };
 
-  //TODO: pridat API ked bude rdy
-  const handleTogglePublished = async () => {};
+  const handleTogglePublished = async () => {
+    // TODO: Implement publish/unpublish functionality
+  };
 
   const handleDeleteEvent = (eventId) => {
     deleteEvent(eventId)
@@ -86,7 +87,7 @@ const Events = () => {
         {isLoading ? (
           <Typography>Načítavam...</Typography>
         ) : (
-          data?.map((event) => (
+          events?.map((event) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={event._id}>
               <Card
                 sx={{

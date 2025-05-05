@@ -163,10 +163,9 @@ export const api = createApi({
       providesTags: ['Events']
     }),
     getEventById: builder.query({
-      query: ({ Id, ...data }) => ({
+      query: ({ Id }) => ({
         url: `/event/${Id}`,
         method: 'GET',
-        body: data
       }),
       providesTags: ['Events']
     }),
