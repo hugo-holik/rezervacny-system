@@ -29,10 +29,10 @@ const EventDetail = () => {
       <Button 
         variant="outlined" 
         startIcon={<ArrowBackIcon />} 
-        onClick={() => navigate('/events')}
+        onClick={() => navigate(-1)}
         sx={{ mb: 3 }}
       >
-        Späť na zoznam udalostí
+        Späť
       </Button>
 
       <Paper elevation={3} sx={{ p: 3 }}>
