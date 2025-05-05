@@ -440,3 +440,22 @@ exports.deleteApplication = async (req, res) => {
 
 
 };
+
+exports.togglePublished = async (req, res) => {
+  const { eventId } = req.params;
+
+  try {
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    event.published = !event.published;
+    await event.save();
+
+    res.json({ success: true, published: event.published });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

@@ -41,6 +41,9 @@ router.post("/addExercise/:id", addExcercise);
 router.put("/editExercise/:eventId/:exerciseId", editExercise);
 router.delete("/removeExercise/:eventId/:exerciseId", removeExercise);
 
+//Publish
+router.put("/togglePublished/:eventId", eventController.togglePublished);
+
 // Aktualizácia stavu účastníka v cvičení
 router.put("/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", updateAttendeeStatus);
 

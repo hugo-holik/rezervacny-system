@@ -253,7 +253,14 @@ export const api = createApi({
         method: 'DELETE'
       }),
       invalidatesTags: ['Events']
-    })
+    }),
+    togglePublished: builder.mutation({
+      query: (eventId) => ({
+        url: `/event/togglePublished/${eventId}`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Events'],
+    }),
   })
 });
 
@@ -288,5 +295,6 @@ export const {
   useSendApplicationMutation,
   useGetApplicationsQuery,
   useDeleteApplicationMutation,
-  useEditApplicationMutation
+  useEditApplicationMutation,
+  useTogglePublishedMutation
 } = api;
