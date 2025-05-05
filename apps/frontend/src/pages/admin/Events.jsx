@@ -1,5 +1,5 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery } from '@app/redux/api';
+import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery, useTogglePublishedMutation } from '@app/redux/api';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -31,9 +31,11 @@ const Events = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const navigate = useNavigate();
-
   const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
+  const navigate = useNavigate();
+  const [togglePublished] = useTogglePublishedMutation();
+  console.log(togglePublished);
+
   const [deleteEvent] = useDeleteEventMutation();
 
   const handleEditClick = (event) => {
@@ -50,8 +52,15 @@ const Events = () => {
     navigate(`/events/${event._id}`);
   };
 
-  const handleTogglePublished = async () => {
-    // TODO: Implement publish/unpublish functionality
+  //TODO: pridat API ked bude rdy
+  const handleTogglePublished = async (event) => {
+    try {
+      await togglePublished(event._id); // voláme API s ID eventu
+      toast.success(`Udalosť ${event.published ? 'odzverejnená' : 'zverejnená'} úspešne!`);
+    } catch (error) {
+      toast.error('Chyba pri zmene stavu publikácie');
+      console.error('Toggle error:', error);
+    }
   };
 
   const handleDeleteEvent = (eventId) => {
