@@ -71,6 +71,7 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
       // 3. Build new openExercise
       const newExercise = {
         date,
+        startTimes: selectedExercise.startTimes,
         exercise: exerciseId,
         exerciseName: selectedExercise.name,
         attendees: [
@@ -87,10 +88,6 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
 
       // 4. Send full event update with new exercise included
       const updatedEvent = {
-        name: selectedEvent.name,
-        datefrom: selectedEvent.datefrom,
-        dateto: selectedEvent.dateto,
-        dateClosing: selectedEvent.dateClosing,
         openExercises: [...(selectedEvent.openExercises || []), newExercise]
       };
 

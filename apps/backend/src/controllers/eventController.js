@@ -108,9 +108,9 @@ exports.remove = async (req, res) => {
 // Otvorene cvicenia
 
 exports.addExcercise = async (req, res) => {
-  const { exerciseName } = req.body;
+  const { exerciseName } = req.body.openExercises[0].exerciseName;
 
-  const eventRecord = await Event.findOne({ _id: req.params.id });
+  const eventRecord = await Event.findOne({ _id: req.params.Id });
   if (!eventRecord) {
     return res.status(404).send();
   }

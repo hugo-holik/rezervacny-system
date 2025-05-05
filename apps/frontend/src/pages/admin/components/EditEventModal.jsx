@@ -9,7 +9,7 @@ import {
   TextField
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'; // Changed from DateTimePicker
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
@@ -51,9 +51,10 @@ const EditEventModal = ({ open, onClose, eventData }) => {
   const onSubmit = async (data) => {
     const formattedData = {
       ...data,
-      datefrom: data.datefrom?.toISOString() || null,
-      dateto: data.dateto?.toISOString() || null,
-      dateClosing: data.dateClosing?.toISOString() || null
+      // Format dates as YYYY-MM-DD without time
+      datefrom: data.datefrom ? dayjs(data.datefrom).format('YYYY-MM-DD') : null,
+      dateto: data.dateto ? dayjs(data.dateto).format('YYYY-MM-DD') : null,
+      dateClosing: data.dateClosing ? dayjs(data.dateClosing).format('YYYY-MM-DD') : null
     };
 
     try {
@@ -93,15 +94,16 @@ const EditEventModal = ({ open, onClose, eventData }) => {
             name="datefrom"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker
                 label="Dátum začiatku"
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
-                format="DD.MM.YYYY - HH:mm"
+                format="DD.MM.YYYY"
                 slotProps={{
                   textField: {
                     error: !!errors.datefrom,
-                    helperText: errors.datefrom?.message
+                    helperText: errors.datefrom?.message,
+                    fullWidth: true
                   }
                 }}
               />
@@ -112,15 +114,16 @@ const EditEventModal = ({ open, onClose, eventData }) => {
             name="dateto"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker
                 label="Dátum konca"
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
-                format="DD.MM.YYYY - HH:mm"
+                format="DD.MM.YYYY"
                 slotProps={{
                   textField: {
                     error: !!errors.dateto,
-                    helperText: errors.dateto?.message
+                    helperText: errors.dateto?.message,
+                    fullWidth: true
                   }
                 }}
               />
@@ -131,15 +134,16 @@ const EditEventModal = ({ open, onClose, eventData }) => {
             name="dateClosing"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker
                 label="Uzávierka"
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
-                format="DD.MM.YYYY - HH:mm"
+                format="DD.MM.YYYY"
                 slotProps={{
                   textField: {
                     error: !!errors.dateClosing,
-                    helperText: errors.dateClosing?.message
+                    helperText: errors.dateClosing?.message,
+                    fullWidth: true
                   }
                 }}
               />
