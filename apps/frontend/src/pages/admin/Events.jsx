@@ -22,7 +22,7 @@ import { toast } from 'react-toastify';
 import AddEventModal from './components/AddEventModal';
 import AddExerciseToEventModal from './components/AddExerciseToEventModal';
 import EditEventModal from './components/EditEventModal';
-import ViewEventModal from './components/ViewEventModal';
+import {useNavigate} from 'react-router-dom';
 
 const Events = () => {
   const { data, isLoading } = useGetAllEventsQuery();
@@ -32,7 +32,7 @@ const Events = () => {
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
-  const [openViewModal, setOpenViewModal] = useState(false);
+  const navigate = useNavigate();
 
   const [deleteEvent] = useDeleteEventMutation();
 
@@ -47,8 +47,7 @@ const Events = () => {
   };
 
   const handleViewEvent = (event) => {
-    setSelectedEvent(event);
-    setOpenViewModal(true);
+    navigate(`/events/${event._id}`);
   };
 
   //TODO: pridat API ked bude rdy
@@ -170,11 +169,6 @@ const Events = () => {
       <AddExerciseToEventModal
         open={openAddExerciseModal}
         onClose={() => setOpenAddExerciseModal(false)}
-        eventData={selectedEvent}
-      />
-      <ViewEventModal
-        open={openViewModal}
-        onClose={() => setOpenViewModal(false)}
         eventData={selectedEvent}
       />
     </Box>
