@@ -1,9 +1,29 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteEventExerciseMutation, useGetEventByIdQuery } from '@app/redux/api';
+import {
+  useDeleteEventExerciseMutation,
+  useGetEventByIdQuery,
+  useSendApplicationMutation
+} from '@app/redux/api';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, Divider, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  IconButton,
+  Paper,
+  TextField,
+  Tooltip,
+  Typography
+} from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -20,10 +40,16 @@ const formatTime = (dateString) => {
 };
 
 const EventDetail = () => {
-  const { id: eventId } = useParams(); // Rename to eventId for clarity
+  const { id: eventId } = useParams();
   const navigate = useNavigate();
   const { data: event, isLoading } = useGetEventByIdQuery({ Id: eventId });
-  const [deleteEventExercise] = useDeleteEventExerciseMutation(); // Add the mutation hook
+  const [deleteEventExercise] = useDeleteEventExerciseMutation();
+  const [sendApplication] = useSendApplicationMutation();
+
+  // State for application dialog
+  const [openApplicationDialog, setOpenApplicationDialog] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [numOfAttendees, setNumOfAttendees] = useState(1);
 
   const handleDeleteExercise = async (exerciseId) => {
     try {
@@ -32,6 +58,34 @@ const EventDetail = () => {
     } catch (error) {
       toast.error('Chyba pri odstraňovaní cvičenia');
       console.error('Delete error:', error);
+    }
+  };
+
+  const handleOpenApplicationDialog = (exercise) => {
+    setSelectedExercise(exercise);
+    setOpenApplicationDialog(true);
+  };
+
+  const handleCloseApplicationDialog = () => {
+    setOpenApplicationDialog(false);
+    setSelectedExercise(null);
+    setNumOfAttendees(1);
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!selectedExercise || !numOfAttendees) return;
+
+    try {
+      await sendApplication({
+        eventId,
+        exerciseId: selectedExercise._id,
+        numOfAttendees: parseInt(numOfAttendees)
+      }).unwrap();
+      toast.success('Prihlásenie bolo úspešné');
+      handleCloseApplicationDialog();
+    } catch (error) {
+      toast.error('Chyba pri prihlasovaní');
+      console.error('Application error:', error);
     }
   };
 
@@ -73,21 +127,28 @@ const EventDetail = () => {
     {
       field: 'actions',
       headerName: 'Akcie',
-      width: 100,
+      width: 200,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
-        <ConfirmationDialog
-          title={`Naozaj chcete odstrániť cvičenie ${params.row.exerciseName}?`}
-          onAccept={() => handleDeleteExercise(params.row._id)}
-        >
-          <Tooltip title="Odstrániť cvičenie">
-            <IconButton size="small">
-              <DeleteIcon fontSize="small" />
+        <Box display="flex" gap={1}>
+          <Tooltip title="Prihlásiť sa">
+            <IconButton color="primary" onClick={() => handleOpenApplicationDialog(params.row)}>
+              <HowToRegIcon />
             </IconButton>
           </Tooltip>
-        </ConfirmationDialog>
+          <ConfirmationDialog
+            title={`Naozaj chcete odstrániť cvičenie ${params.row.exerciseName}?`}
+            onAccept={() => handleDeleteExercise(params.row._id)}
+          >
+            <Tooltip title="Odstrániť cvičenie">
+              <IconButton color="error">
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </ConfirmationDialog>
+        </Box>
       ),
       cellClassName: 'vertical-align-center'
     }
@@ -163,11 +224,6 @@ const EventDetail = () => {
               },
               '& .MuiDataGrid-cell': {
                 py: 2
-              },
-              '& .MuiDataGrid-row': {
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
               }
             }}
           >
@@ -177,26 +233,10 @@ const EventDetail = () => {
               getRowId={(row) => row._id}
               pageSizeOptions={[10, 20, 50]}
               initialState={{
-                density: 'standard',
+                density: 'compact',
                 pagination: {
                   paginationModel: {
                     pageSize: 10
-                  }
-                }
-              }}
-              rowHeight={56} // consistent row height
-              sx={{
-                '& .MuiDataGrid-cell': {
-                  display: 'flex',
-                  alignItems: 'center',
-                  py: 1 // vertical padding
-                },
-                '& .MuiDataGrid-columnHeaders': {
-                  backgroundColor: '#f5f5f5'
-                },
-                '& .MuiDataGrid-row': {
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
                   }
                 }
               }}
@@ -218,6 +258,43 @@ const EventDetail = () => {
           <Typography variant="body1">Cvičenia ešte neboli pridané.</Typography>
         )}
       </Paper>
+
+      {/* Application Dialog */}
+      <Dialog open={openApplicationDialog} onClose={handleCloseApplicationDialog}>
+        <DialogTitle>Prihlásenie na cvičenie</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, minWidth: 300 }}>
+            <Typography variant="body1" gutterBottom>
+              <strong>Cvičenie:</strong> {selectedExercise?.exerciseName}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Dátum:</strong> {selectedExercise && formatDate(selectedExercise.date)}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Čas:</strong> {selectedExercise && formatTime(selectedExercise.startTime)}
+            </Typography>
+            <TextField
+              label="Počet účastníkov"
+              type="number"
+              fullWidth
+              margin="normal"
+              value={numOfAttendees}
+              onChange={(e) => setNumOfAttendees(e.target.value)}
+              inputProps={{ min: 1 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseApplicationDialog}>Zrušiť</Button>
+          <Button
+            onClick={handleSubmitApplication}
+            variant="contained"
+            disabled={!numOfAttendees || numOfAttendees < 1}
+          >
+            Potvrdiť
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
