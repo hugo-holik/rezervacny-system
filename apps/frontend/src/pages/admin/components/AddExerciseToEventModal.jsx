@@ -59,19 +59,16 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
 
   const handleSubmit = async () => {
     try {
-      // 1. Fetch all events and find the selected one
       const allEvents = events || [];
       const selectedEvent = allEvents.find((e) => e._id === eventData._id);
       if (!selectedEvent) throw new Error('Event not found');
 
-      // 2. Find exercise name from exercise list using exerciseId
       const selectedExercise = exercises.find((e) => e._id === exerciseId);
       if (!selectedExercise) throw new Error('Exercise not found');
 
-      // 3. Build new openExercise
       const newExercise = {
         date,
-        startTimes: selectedExercise.startTimes,
+        startTime: selectedExercise.startTimes[0], // ✅ just one string
         exercise: exerciseId,
         exerciseName: selectedExercise.name,
         attendees: [
@@ -86,12 +83,7 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
         note
       };
 
-      // 4. Send full event update with new exercise included
-      const updatedEvent = {
-        openExercises: [...(selectedEvent.openExercises || []), newExercise]
-      };
-
-      await addEventExercise({ Id: selectedEvent._id, ...updatedEvent }).unwrap();
+      await addEventExercise({ Id: selectedEvent._id, ...newExercise }).unwrap();
 
       onClose();
     } catch (error) {
