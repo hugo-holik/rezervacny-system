@@ -2,6 +2,7 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteEventExerciseMutation,
   useGetEventByIdQuery,
+  useGetUserMeQuery,
   useSendApplicationMutation
 } from '@app/redux/api';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -26,7 +27,6 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   const pad = (n) => String(n).padStart(2, '0');
@@ -40,6 +40,8 @@ const formatTime = (dateString) => {
 };
 
 const EventDetail = () => {
+  const { data: currentUser } = useGetUserMeQuery(); // Add this line to get current user
+
   const { id: eventId } = useParams();
   const navigate = useNavigate();
   const { data: event, isLoading } = useGetEventByIdQuery({ Id: eventId });
@@ -131,25 +133,31 @@ const EventDetail = () => {
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Box display="flex" gap={1}>
-          <Tooltip title="Prihlásiť sa">
-            <IconButton color="primary" onClick={() => handleOpenApplicationDialog(params.row)}>
-              <HowToRegIcon />
-            </IconButton>
-          </Tooltip>
-          <ConfirmationDialog
-            title={`Naozaj chcete odstrániť cvičenie ${params.row.exerciseName}?`}
-            onAccept={() => handleDeleteExercise(params.row._id)}
-          >
-            <Tooltip title="Odstrániť cvičenie">
-              <IconButton color="error">
-                <DeleteIcon />
+      renderCell: (params) => {
+        const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
+
+        return (
+          <Box display="flex" gap={1}>
+            <Tooltip title="Prihlásiť sa">
+              <IconButton color="primary" onClick={() => handleOpenApplicationDialog(params.row)}>
+                <HowToRegIcon />
               </IconButton>
             </Tooltip>
-          </ConfirmationDialog>
-        </Box>
-      ),
+            {isPrivileged && (
+              <ConfirmationDialog
+                title={`Naozaj chcete odstrániť cvičenie ${params.row.exerciseName}?`}
+                onAccept={() => handleDeleteExercise(params.row._id)}
+              >
+                <Tooltip title="Odstrániť cvičenie">
+                  <IconButton color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              </ConfirmationDialog>
+            )}
+          </Box>
+        );
+      },
       cellClassName: 'vertical-align-center'
     }
   ];

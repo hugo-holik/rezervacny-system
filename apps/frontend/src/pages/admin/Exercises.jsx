@@ -5,7 +5,7 @@ import {
   useGetUserMeQuery,
   useGetUsersListQuery
 } from '@app/redux/api';
-import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+// import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
