@@ -1,5 +1,5 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useGetApplicationsQuery } from '@app/redux/api';
+import { useDeleteApplicationMutation, useGetApplicationsQuery } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 
 const Applications = () => {
   const { data: applications, isLoading, isError } = useGetApplicationsQuery();
+  const [deleteApplication] = useDeleteApplicationMutation();
 
   const getStatusColor = (status) => {
     if (!status) return 'default';
@@ -104,7 +105,7 @@ const Applications = () => {
         <ConfirmationDialog
           key={'delete'}
           title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
-          onAccept={() => handleDeleteApplication(params?.row?.applicationId)}
+          onAccept={() => handleDeleteApplication(params.row)}
         >
           <Tooltip title="Delete application">
             <IconButton size="small">
@@ -116,11 +117,23 @@ const Applications = () => {
     }
   ];
 
-  const handleDeleteApplication = async (id) => {
-    if (!id) return;
+  const handleDeleteApplication = async (row) => {
+    console.log('Deleting row:', row); // Add this to debug
+    console.log('Deleting row:', row.applicationId); // Add this to debug
+    console.log('Deleting row:', row.exerciseId); // Add this to debug
+    console.log('Deleting row:', row.eventId); // Add this to debug
+
+    if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
+      toast.error('Missing required IDs for deletion');
+      return;
+    }
+
     try {
-      // Add your delete mutation here
-      // await deleteApplication(id).unwrap();
+      await deleteApplication({
+        eventId: row.eventId,
+        exerciseId: row.exerciseId,
+        applicationId: row.applicationId
+      }).unwrap();
       toast.success('Application deleted successfully');
     } catch (error) {
       toast.error('Error deleting application');
@@ -165,7 +178,7 @@ const Applications = () => {
           getRowId={(row) => row?.applicationId}
           pageSizeOptions={[10, 20, 50]}
           initialState={{
-            density: 'comfortable', // Changed from 'compact' to 'comfortable'
+            density: 'comfortable',
             pagination: {
               paginationModel: {
                 pageSize: 20
@@ -184,18 +197,18 @@ const Applications = () => {
           ignoreDiacritics
           sx={{
             '& .MuiDataGrid-row': {
-              minHeight: '52px !important', // Increased row height
+              minHeight: '52px !important',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.04)'
               }
             },
             '& .MuiDataGrid-cell': {
-              py: 2, // Increased vertical padding
+              py: 2,
               display: 'flex',
-              alignItems: 'center' // Vertically center content
+              alignItems: 'center'
             },
             '& .MuiDataGrid-columnHeaders': {
-              minHeight: '56px !important' // Taller header row
+              minHeight: '56px !important'
             }
           }}
         />
