@@ -25,9 +25,9 @@ export const api = createApi({
     }),
     changeUserPassword: builder.mutation({
       query: (data) => ({
-        url: '/user/change-password',
+        url: '/user/changePassword',
         method: 'PUT',
-        body: { password: data.password }
+        body: data.data
       }),
       transformErrorResponse: (response) => {
         // Handle array of errors or single error message

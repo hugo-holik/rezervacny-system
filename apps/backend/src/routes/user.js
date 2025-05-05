@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/current', getCurrentUser);
 router.post('/signout', SignOut);
-router.put('/change-password', changePassword);
+router.put('/changePassword', changePassword);
 router.put('/', edit);
 
 module.exports = router;

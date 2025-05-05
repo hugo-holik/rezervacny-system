@@ -5,8 +5,10 @@ import { RouteNotFound } from './components/RouteNotFound.component';
 import Info from './pages/admin/Info';
 import authRoutes from './pages/auth';
 import Dashboard from './pages/dashboard/Dashboard';
+import EventDetail from './pages/admin/EventDetail';
 
 import adminRoutes from '@app/pages/admin';
+import { element } from 'prop-types';
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: '*',
         element: <RouteNotFound />
+      },
+      {
+        path: 'events/:id',
+        element: <EventDetail />
       }
     ]
   },
