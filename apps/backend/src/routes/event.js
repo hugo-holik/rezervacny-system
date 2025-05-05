@@ -13,6 +13,7 @@ const {
   editApplication,
   deleteApplication,
   updateAttendeeStatus,
+  togglePublished
 } = require("../controllers/eventController");
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.delete(
 );
 
 // udalosti
+router.put("/togglePublished/:eventId", togglePublished);
 router.post("/", create);
 router.get("/", get);
 router.get("/:id", getEventById);
@@ -40,9 +42,6 @@ router.delete("/:id", remove);
 router.post("/addExercise/:id", addExcercise);
 router.put("/editExercise/:eventId/:exerciseId", editExercise);
 router.delete("/removeExercise/:eventId/:exerciseId", removeExercise);
-
-//Publish
-router.put("/togglePublished/:eventId", eventController.togglePublished);
 
 // Aktualizácia stavu účastníka v cvičení
 router.put("/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", updateAttendeeStatus);
