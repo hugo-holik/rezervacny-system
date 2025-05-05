@@ -6,6 +6,7 @@ import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
 import './CalendarCustom.css';
+import { useNavigate } from 'react-router-dom';
 
 // Set moment to use Slovak locale
 moment.locale('sk', {
@@ -51,29 +52,10 @@ const Calendar = () => {
   const [combinedEvents, setCombinedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  
 
-  // Map exercises
-  useEffect(() => {
-    if (exercises) {
-      const mappedExercises = exercises
-        .map((exercise) =>
-          exercise.startTimes.map((startTime) => {
-            const start = moment(startTime);
-            const end = moment(start).add(exercise.duration, 'minutes');
-            return {
-              title: exercise.name,
-              start: start.toDate(),
-              end: end.toDate(),
-              allDay: false,
-              color: exercise.color || '#00bcd4',
-              description: exercise.description || ''
-            };
-          })
-        )
-        .flat();
-      setCombinedEvents(mappedExercises);
-    }
-  }, [exercises]);
+
 
   // Map events
   useEffect(() => {
@@ -84,15 +66,16 @@ const Calendar = () => {
         const start = moment(event.datefrom);
         const end = moment(event.dateto);
         return {
+          _id: event._id,
           title: event.name,
           start: start.toDate(),
           end: end.toDate(),
           allDay: false,
           color: event.published ? '#4caf50' : '#f44336',
-          description: ''
+          description: '',
         };
       });
-      setCombinedEvents((prev) => [...prev, ...mappedEvents]);
+      setCombinedEvents(mappedEvents);
     }
   }, [events]);
 
@@ -100,17 +83,20 @@ const Calendar = () => {
   if (isError || isEventsError) return <div>Chyba načítavania</div>;
 
   const handleEventClick = (event) => {
+    console.log('Event clicked:', event);  // Log the event data
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
-
-  const handleJoinRequest = () => {
-    if (selectedEvent) {
-      alert(`Žiadosť o pripojenie: ${selectedEvent.title}`);
+  
+  const handleGoToDetails = () => {
+    console.log('Selected Event ID:', selectedEvent?._id);  // Log the event ID
+    if (selectedEvent && selectedEvent._id) {
+      navigate(`/events/${selectedEvent._id}`);
+    } else {
+      console.warn('ID udalosti nie je dostupné.');
     }
-    setIsModalOpen(false);
   };
-
+  
   return (
     <div className={`calendar-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
       <div className="calendar-box">
@@ -599,7 +585,7 @@ const Calendar = () => {
               Zavrieť
             </button>
             <button
-              onClick={handleJoinRequest}
+              onClick={handleGoToDetails}
               style={{
                 padding: '10px 20px',
                 borderRadius: '6px',
@@ -615,7 +601,7 @@ const Calendar = () => {
                 }
               }}
             >
-              Prihlásiť sa
+              Prejsť na detaily
             </button>
           </div>
         </div>
