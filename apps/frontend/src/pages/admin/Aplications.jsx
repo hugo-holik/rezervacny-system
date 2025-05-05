@@ -162,7 +162,7 @@ const Applications = () => {
       <Grid py={1} px={1} container spacing={1}>
         <Grid item xs={12} sm={9} display={'flex'}>
           <Typography variant="h4" alignSelf={'center'}>
-            Applications
+            Prihlášky
           </Typography>
         </Grid>
         <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
