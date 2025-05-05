@@ -221,6 +221,7 @@ export const api = createApi({
         url: `/event/updateAttendeeStatus/${eventId}/${exerciseId}/${attendeeId}`,
         method: 'PUT',
         body: { status },
+        invalidatesTags: (result) => (result ? ['Events'] : [])
       }),
     }),
     sendApplication: builder.mutation({
@@ -238,6 +239,21 @@ export const api = createApi({
         body: data
       }),
       providesTags: ['Events']
+    }),
+    editApplication: builder.mutation({
+      query: ({ eventId, exerciseId, applicationId, ...data }) => ({
+        url: `/event/editApplication/${eventId}/${exerciseId}/${applicationId}`,
+        method: 'PUT',
+        body: data
+      }),
+      invalidatesTags: (result) => (result ? ['Events'] : [])
+    }),
+    deleteApplication: builder.mutation({
+      query: (eventId, exerciseId, applicationId) => ({
+        url: `/event/deleteApplication/${eventId}/${exerciseId}/${applicationId}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Events']
     })
   })
 });
@@ -271,5 +287,7 @@ export const {
   useAddExerciseToEventMutation,
   useChangeUserPasswordMutation,
   useSendApplicationMutation,
-  useGetApplicationsQuery
+  useGetApplicationsQuery,
+  useDeleteApplicationMutation,
+  useEditApplicationMutation
 } = api;

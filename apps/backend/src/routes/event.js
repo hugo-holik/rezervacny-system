@@ -10,6 +10,8 @@ const {
   removeExercise,
   sendApplication,
   getApplications,
+  editApplication,
+  deleteApplication,
   updateAttendeeStatus,
 } = require("../controllers/eventController");
 
@@ -18,6 +20,14 @@ const router = express.Router();
 // applications (prihlasovanie na otvorene cvicenia)
 router.post("/sendApplication/:eventId/:exerciseId", sendApplication);
 router.get("/getApplications", getApplications);
+router.put(
+  "/editApplication/:eventId/:exerciseId/:applicationId",
+  editApplication
+);
+router.delete(
+  "/deleteApplication/:eventId/:exerciseId/:applicationId",
+  deleteApplication
+);
 
 // udalosti
 router.post("/", create);
@@ -31,9 +41,7 @@ router.post("/addExercise/:id", addExcercise);
 router.put("/editExercise/:eventId/:exerciseId", editExercise);
 router.delete("/removeExercise/:eventId/:exerciseId", removeExercise);
 
-
 // Aktualizácia stavu účastníka v cvičení
 router.put("/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", updateAttendeeStatus);
-
 
 module.exports = router;

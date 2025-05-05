@@ -217,37 +217,36 @@ exports.addExcercise = async (req, res) => {
   exports.updateAttendeeStatus = async (req, res) => {
     const { eventId, exerciseId, attendeeId } = req.params;
     const { approvalStatus } = req.body;
-  
     
     const eventRecord = await Event.findById(eventId);
     if (!eventRecord) {
       return res.status(404).send({ error: "Event not found" });
-  };
+    };
 
-  const exercise = eventRecord.openExercises.find(
-    (ex) => ex._id.toString() === exerciseId
-  );
-  if (!exercise) {
-    return res.status(404).send({ error: "Exercise not found in event" });
-  }
+    const exercise = eventRecord.openExercises.find(
+      (ex) => ex._id.toString() === exerciseId
+    );
+    if (!exercise) {
+      return res.status(404).send({ error: "Exercise not found in event" });
+    }
 
-  const attendee = exercise.attendees.find(
-    (att) => att._id.toString() === attendeeId
-  );
-  if (!attendee) {
-    return res.status(404).send({ error: "Attendee not found" });
-  }
-
-  attendee.approvalStatus = approvalStatus;
-  if (approvalStatus === "schválené" && !attendee.approvedAt) {
-    attendee.approvedAt = new Date();
-  }
-  try {
-    await eventRecord.save();
-    res.status(200).send({ message: "Attendee updated" });
-  } catch (err) {
-    throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
-  }
+    const attendee = exercise.attendees.find(
+      (att) => att._id.toString() === attendeeId
+    );
+    if (!attendee) {
+      return res.status(404).send({ error: "Attendee not found" });
+    }
+    
+    attendee.approvalStatus = approvalStatus;
+    if (approvalStatus === APPROVAL_STATUS_ENUM.APPROVED && !attendee.approvedAt) {
+      attendee.approvedAt = new Date();
+    }
+    try {
+      await eventRecord.save();
+      res.status(200).send({ message: "Attendee status updated" });
+    } catch (err) {
+      throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+    }
   };  
 
   exports.sendApplication = [
@@ -369,4 +368,75 @@ exports.addExcercise = async (req, res) => {
       res.send(applications);
     } catch (error) {}
   };
+
+  exports.editApplication = async (req, res) => {
+    const { eventId, exerciseId, applicationId } = req.params;
   
+    const eventRecord = await Event.findOne({ _id: eventId });
+    if (!eventRecord) {
+      return res.status(404).send();
+    }
+    const exerciseRecord = eventRecord.openExercises.find(
+      (exercise) => exercise._id.toString() === exerciseId
+    );
+    if (!exerciseRecord) {
+      return res.status(404).send();
+    }
+    const applicationRecord = exerciseRecord.attendees.find(
+      (application) => application._id.toString() === applicationId
+    );
+    if (!applicationRecord) {
+      return res.status(404).send();
+    }
+  
+    const updatedApplication = {
+      numOfAttendees: req.body.numOfAttendees,
+    };
+  
+    const updatedExerciseRecord = exerciseRecord.attendees.map((application) => {
+      if (application._id.toString() === applicationId) {
+        return { ...application, ...updatedApplication };
+      }
+      return application;
+    });
+
+    try {
+      exerciseRecord.attendees = updatedExerciseRecord;
+      await eventRecord.save();
+
+      res.status(200).send({});
+    } catch (error) {
+      throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
+    }
+  };
+  
+  exports.deleteApplication = async (req, res) => {
+    const { eventId, exerciseId, applicationId } = req.params;
+  
+    const eventRecord = await Event.findOne({ _id: eventId });
+    if (!eventRecord) {
+      return res.status(404).send();
+    }
+  
+    const exerciseRecord = eventRecord.openExercises.find(
+      (exercise) => exercise._id.toString() === exerciseId
+    );
+  
+    if (!exerciseRecord) {
+      return res.status(404).send();
+    }
+  
+    const applicationIndex = exerciseRecord.attendees.findIndex(
+      (application) => application._id.toString() === applicationId
+    );
+  
+    if (applicationIndex === -1) {
+      return res.status(404).send();
+    }
+  
+    exerciseRecord.attendees.splice(applicationIndex, 1);
+    await eventRecord.save();
+    res.send({});
+
+    
+  };
