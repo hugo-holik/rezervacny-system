@@ -9,7 +9,7 @@ import {
   TextField
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'; // Changed from DateTimePicker
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
@@ -38,12 +38,12 @@ const AddEventModal = ({ open, onClose }) => {
 
   const onSubmit = async (data) => {
     console.log('Form data:', data);
-    // data.datefrom, dateto, dateClosing are now native Date objects
+    // Convert dates to ISO string format without time
     const formData = {
       ...data,
-      datefrom: data.datefrom ? data.datefrom.toISOString() : null,
-      dateto: data.dateto ? data.dateto.toISOString() : null,
-      dateClosing: data.dateClosing ? data.dateClosing.toISOString() : null
+      datefrom: data.datefrom ? dayjs(data.datefrom).format('YYYY-MM-DD') : null,
+      dateto: data.dateto ? dayjs(data.dateto).format('YYYY-MM-DD') : null,
+      dateClosing: data.dateClosing ? dayjs(data.dateClosing).format('YYYY-MM-DD') : null
     };
 
     try {
@@ -81,12 +81,10 @@ const AddEventModal = ({ open, onClose }) => {
             name="datefrom"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker // Changed to DatePicker
                 label="Dátum začiatku"
                 {...field}
-                // Convert the current value into a Dayjs object for the picker.
                 value={field.value ? dayjs(field.value) : null}
-                // Convert the selected Dayjs value to a native Date object.
                 onChange={(newValue) => field.onChange(newValue ? newValue.toDate() : null)}
                 slotProps={{
                   textField: {
@@ -101,7 +99,7 @@ const AddEventModal = ({ open, onClose }) => {
             name="dateto"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker // Changed to DatePicker
                 label="Dátum konca"
                 {...field}
                 value={field.value ? dayjs(field.value) : null}
@@ -119,7 +117,7 @@ const AddEventModal = ({ open, onClose }) => {
             name="dateClosing"
             control={control}
             render={({ field }) => (
-              <DateTimePicker
+              <DatePicker // Changed to DatePicker
                 label="Uzávierka"
                 {...field}
                 value={field.value ? dayjs(field.value) : null}

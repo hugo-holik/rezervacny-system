@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const MyAccount = () => {
-  const { data: user, isLoading: isUserLoading } = useGetUserMeQuery();
+  const { isLoading: isUserLoading } = useGetUserMeQuery();
   const [changeUserPassword, { isLoading: isPasswordChanging }] = useChangeUserPasswordMutation();
 
   const [formData, setFormData] = useState({

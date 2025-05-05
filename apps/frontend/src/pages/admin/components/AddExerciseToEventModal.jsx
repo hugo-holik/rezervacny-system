@@ -1,4 +1,9 @@
 import {
+  useAddEventExerciseMutation,
+  useGetAllEventsQuery,
+  useGetAllExercisesQuery
+} from '@app/redux/api';
+import {
   Button,
   Dialog,
   DialogActions,
@@ -12,15 +17,14 @@ import {
 } from '@mui/material';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
-import { useAddEventExerciseMutation, useGetAllExercisesQuery } from '@app/redux/api';
 
 const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
   const [exerciseId, setExerciseId] = useState('');
   const [note, setNote] = useState('');
   const [addEventExercise] = useAddEventExerciseMutation();
   const { data: exercises = [] } = useGetAllExercisesQuery();
+  const { data: events = [] } = useGetAllEventsQuery();
 
   if (!eventData) return null;
 
@@ -51,13 +55,42 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
 
   const handleSubmit = async () => {
     try {
-      await addEventExercise({
-        Id: eventData._id,
+      // 1. Fetch all events and find the selected one
+      const allEvents = events || [];
+      const selectedEvent = allEvents.find((e) => e._id === eventData._id);
+      if (!selectedEvent) throw new Error('Event not found');
+
+      // 2. Find exercise name from exercise list using exerciseId
+      const selectedExercise = exercises.find((e) => e._id === exerciseId);
+      if (!selectedExercise) throw new Error('Exercise not found');
+
+      // 3. Build new openExercise
+      const newExercise = {
         date,
-        startTime,
-        exerciseId,
+        exercise: exerciseId,
+        exerciseName: selectedExercise.name,
+        attendees: [
+          {
+            teacher: selectedExercise.leads[0],
+            numOfAttendees: selectedExercise.numOfAttendees,
+            approvalStatus: 'pending',
+            approvedAt: null
+          }
+        ],
+        status: 'čaká na schválenie',
         note
-      }).unwrap();
+      };
+
+      // 4. Send full event update with new exercise included
+      const updatedEvent = {
+        name: selectedEvent.name,
+        datefrom: selectedEvent.datefrom,
+        dateto: selectedEvent.dateto,
+        dateClosing: selectedEvent.dateClosing,
+        openExercises: [...(selectedEvent.openExercises || []), newExercise]
+      };
+
+      await addEventExercise({ Id: selectedEvent._id, ...updatedEvent }).unwrap();
 
       onClose();
     } catch (error) {
@@ -77,15 +110,6 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
           InputLabelProps={{ shrink: true }}
           value={date}
           onChange={(e) => setDate(e.target.value)}
-        />
-        <TextField
-          fullWidth
-          label="Čas začiatku"
-          type="time"
-          margin="normal"
-          InputLabelProps={{ shrink: true }}
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
         />
         <FormControl fullWidth margin="normal">
           <InputLabel id="exercise-select-label">Vyber cvičenie</InputLabel>

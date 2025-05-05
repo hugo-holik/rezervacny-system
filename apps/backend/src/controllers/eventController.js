@@ -108,8 +108,8 @@ exports.remove = async (req, res) => {
 // Otvorene cvicenia
 
 exports.addExcercise = async (req, res) => {
-  const { exerciseId, exerciseName } = req.body;
-  
+  const { exerciseName } = req.body;
+
   const eventRecord = await Event.findOne({ _id: req.params.id });
   if (!eventRecord) {
     return res.status(404).send();
@@ -130,7 +130,7 @@ exports.addExcercise = async (req, res) => {
     return res.status(404).send();
   }
 
-  
+
   const newExercise = {
     date: req.body.date,
     startTime: req.body.startTime,
@@ -150,293 +150,293 @@ exports.addExcercise = async (req, res) => {
     return res.status(500).json({ error: `${req.t("messages.database_error")}: ${err.message}` });
   }
 };
-  
-  exports.editExercise = [
-    body("date").optional(),
-    body("startTime").optional(),
-    body("exercise").optional(),
-    body("status").optional(),
-    body("note").optional(),
-  
-    async (req, res) => {
-      const matched = matchedData(req, {
-        includeOptional: true,
-        onlyValidData: true,
-      });
-  
-      const { eventId, exerciseId } = req.params;
-  
-      const eventRecord = await Event.findOne({ _id: eventId });
-      if (!eventRecord) {
-        return res.status(404).send();
-      }
-  
-      const exerciseRecord = eventRecord.openExercises.find(
-        (exercise) => exercise._id.toString() === exerciseId
-      );
-      if (!exerciseRecord) {
-        return res.status(404).send();
-      }
-  
-      try {
-        for (const key in matched) {
-          if (matched[key] !== undefined) {
-            exerciseRecord[key] = matched[key];
-          }
-        }
-  
-        await eventRecord.save();
-  
-        res.status(200).send({});
-      } catch (error) {
-        throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
-      }
-    },
-  ];
-  
-  exports.removeExercise = async (req, res) => {
+
+exports.editExercise = [
+  body("date").optional(),
+  body("startTime").optional(),
+  body("exercise").optional(),
+  body("status").optional(),
+  body("note").optional(),
+
+  async (req, res) => {
+    const matched = matchedData(req, {
+      includeOptional: true,
+      onlyValidData: true,
+    });
+
     const { eventId, exerciseId } = req.params;
-  
-    const eventRecord = await Event.findById(eventId);
-    if (eventRecord) {
-      try {
-        await Event.updateOne(
-          { _id: eventId },
-          { $pull: { openExercises: { _id: exerciseId } } }
-        );
-        res.status(200).send({});
-      } catch (error) {
-        console.error("Error removing exercise:", error);
-        return res.status(500).json({ error: `${req.t("messages.database_error")}: ${error.message}` });
-      }
-    } else {
-      return res.status(404).json({ error: req.t("messages.record_not_exists") });
-    }
-  };
 
-  exports.updateAttendeeStatus = async (req, res) => {
-    const { eventId, exerciseId, attendeeId } = req.params;
-    const { approvalStatus } = req.body;
-    
-    const eventRecord = await Event.findById(eventId);
-    if (!eventRecord) {
-      return res.status(404).send({ error: "Event not found" });
-    };
-
-    const exercise = eventRecord.openExercises.find(
-      (ex) => ex._id.toString() === exerciseId
-    );
-    if (!exercise) {
-      return res.status(404).send({ error: "Exercise not found in event" });
-    }
-
-    const attendee = exercise.attendees.find(
-      (att) => att._id.toString() === attendeeId
-    );
-    if (!attendee) {
-      return res.status(404).send({ error: "Attendee not found" });
-    }
-    
-    attendee.approvalStatus = approvalStatus;
-    if (approvalStatus === APPROVAL_STATUS_ENUM.APPROVED && !attendee.approvedAt) {
-      attendee.approvedAt = new Date();
-    }
-    try {
-      await eventRecord.save();
-      res.status(200).send({ message: "Attendee status updated" });
-    } catch (err) {
-      throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
-    }
-  };  
-
-  exports.sendApplication = [
-    validate(sendApplicationSchema),
-    async (req, res) => {
-      const { eventId, exerciseId } = req.params;
-      const requestedAttendees = validated(req).numOfAttendees;
-
-      const eventRecord = await Event.findOne({ _id: eventId });
-      if (!eventRecord) {
-        return res.status(404).send();
-      }
-    
-      const openExerciseRecord = eventRecord.openExercises.find(
-        (exercise) => exercise._id.toString() === exerciseId
-      );
-      if (!openExerciseRecord) {
-        return res.status(404).send();
-      }
-    
-      if (openExerciseRecord.status !== APPROVAL_STATUS_ENUM.APPROVED) {
-        return res.status(400).json({
-          error: "Nemôžete sa prihlásiť na cvičenie, pretože cvičenie nie je schválené.",
-        });
-      }
-    
-      const exerciseRecord = await Exercise.findOne({
-        _id: openExerciseRecord.exercise.toString(),
-      });
-      if (!exerciseRecord) {
-        return res.status(404).send();
-      }
-
-      const applicationAlreadyExists = openExerciseRecord.attendees
-        .some(attendee => attendee.teacher.toString() === req.user.user_id.toString());
-      if (applicationAlreadyExists) {
-        return res.status(400).json({
-          error: "Už ste na dané cvičenie prihlásení.",
-        });
-      }
-    
-      const maxAttendees = exerciseRecord.maxAttendees;
-    
-      const totalAttendees = openExerciseRecord.attendees.reduce(
-        (total, attendee) => total + attendee.numOfAttendees,
-        0
-      );
-    
-      if (
-        requestedAttendees > maxAttendees ||
-        totalAttendees + requestedAttendees > maxAttendees
-      ) {
-        return res.status(404).json({
-          error: "Zadaný počet účastníkov prekračuje maximálnu kapacitu.",
-        });
-      }
-      
-      const newApplication = {
-        teacher: req.user.user_id,
-        numOfAttendees: requestedAttendees,
-        approvalStatus: APPROVAL_STATUS_ENUM.PENDING,
-        createdAt: new Date(),
-        approvedAt: null,
-      };
-    
-      if (!openExerciseRecord.attendees) {
-        openExerciseRecord.attendees = [];
-      }
-      
-      openExerciseRecord.attendees.push(newApplication);
-
-      try {
-        await eventRecord.save();
-        res.status(200).send({ message: "Application created" });
-      } catch (err) {
-        throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
-      }
-    }
-  ];  
-
-  exports.getApplications = async (req, res) => {
-    const currentUser = req.user;
-    try {
-      const events = await Event.find();
-      const exercises = await Exercise.find();
-      const applications = [];
-  
-      for (const event of events) {
-        for (const openExercise of event.openExercises) {
-          for (const attendee of openExercise.attendees) {
-            if (attendee.teacher.toString() === currentUser.user_id.toString()) {
-              const eventData = {
-                date: openExercise.date,
-                startTime: openExercise.startTime,
-                numOfAttendees: attendee.numOfAttendees,
-                approvalState: attendee.approvalStatus,
-                eventId: event._id,
-                dateClosing: event.dateClosing,
-                exerciseId: openExercise._id,
-                applicationId: attendee._id,
-                createdAt: attendee.createdAt,
-                approvedAt: attendee.approvedAt,
-              };
-  
-              const foundExercise = exercises.find(
-                (e) => e._id.toString() === openExercise.exercise.toString()
-              );
-              if (foundExercise) {
-                eventData.maxAttendees = foundExercise.maxAttendees;
-                eventData.exerciseName = foundExercise.name;
-              }
-  
-              applications.push(eventData);
-            }
-          }
-        }
-      }
-  
-      res.send(applications);
-    } catch (error) {}
-  };
-
-  exports.editApplication = async (req, res) => {
-    const { eventId, exerciseId, applicationId } = req.params;
-  
     const eventRecord = await Event.findOne({ _id: eventId });
     if (!eventRecord) {
       return res.status(404).send();
     }
+
     const exerciseRecord = eventRecord.openExercises.find(
       (exercise) => exercise._id.toString() === exerciseId
     );
     if (!exerciseRecord) {
       return res.status(404).send();
     }
-    const applicationRecord = exerciseRecord.attendees.find(
-      (application) => application._id.toString() === applicationId
-    );
-    if (!applicationRecord) {
-      return res.status(404).send();
-    }
-  
-    const updatedApplication = {
-      numOfAttendees: req.body.numOfAttendees,
-    };
-  
-    const updatedExerciseRecord = exerciseRecord.attendees.map((application) => {
-      if (application._id.toString() === applicationId) {
-        return { ...application, ...updatedApplication };
-      }
-      return application;
-    });
 
     try {
-      exerciseRecord.attendees = updatedExerciseRecord;
+      for (const key in matched) {
+        if (matched[key] !== undefined) {
+          exerciseRecord[key] = matched[key];
+        }
+      }
+
       await eventRecord.save();
 
       res.status(200).send({});
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
+  },
+];
+
+exports.removeExercise = async (req, res) => {
+  const { eventId, exerciseId } = req.params;
+
+  const eventRecord = await Event.findById(eventId);
+  if (eventRecord) {
+    try {
+      await Event.updateOne(
+        { _id: eventId },
+        { $pull: { openExercises: { _id: exerciseId } } }
+      );
+      res.status(200).send({});
+    } catch (error) {
+      console.error("Error removing exercise:", error);
+      return res.status(500).json({ error: `${req.t("messages.database_error")}: ${error.message}` });
+    }
+  } else {
+    return res.status(404).json({ error: req.t("messages.record_not_exists") });
+  }
+};
+
+exports.updateAttendeeStatus = async (req, res) => {
+  const { eventId, exerciseId, attendeeId } = req.params;
+  const { approvalStatus } = req.body;
+
+  const eventRecord = await Event.findById(eventId);
+  if (!eventRecord) {
+    return res.status(404).send({ error: "Event not found" });
   };
-  
-  exports.deleteApplication = async (req, res) => {
-    const { eventId, exerciseId, applicationId } = req.params;
-  
+
+  const exercise = eventRecord.openExercises.find(
+    (ex) => ex._id.toString() === exerciseId
+  );
+  if (!exercise) {
+    return res.status(404).send({ error: "Exercise not found in event" });
+  }
+
+  const attendee = exercise.attendees.find(
+    (att) => att._id.toString() === attendeeId
+  );
+  if (!attendee) {
+    return res.status(404).send({ error: "Attendee not found" });
+  }
+
+  attendee.approvalStatus = approvalStatus;
+  if (approvalStatus === APPROVAL_STATUS_ENUM.APPROVED && !attendee.approvedAt) {
+    attendee.approvedAt = new Date();
+  }
+  try {
+    await eventRecord.save();
+    res.status(200).send({ message: "Attendee status updated" });
+  } catch (err) {
+    throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+  }
+};
+
+exports.sendApplication = [
+  validate(sendApplicationSchema),
+  async (req, res) => {
+    const { eventId, exerciseId } = req.params;
+    const requestedAttendees = validated(req).numOfAttendees;
+
     const eventRecord = await Event.findOne({ _id: eventId });
     if (!eventRecord) {
       return res.status(404).send();
     }
-  
-    const exerciseRecord = eventRecord.openExercises.find(
+
+    const openExerciseRecord = eventRecord.openExercises.find(
       (exercise) => exercise._id.toString() === exerciseId
     );
-  
+    if (!openExerciseRecord) {
+      return res.status(404).send();
+    }
+
+    if (openExerciseRecord.status !== APPROVAL_STATUS_ENUM.APPROVED) {
+      return res.status(400).json({
+        error: "Nemôžete sa prihlásiť na cvičenie, pretože cvičenie nie je schválené.",
+      });
+    }
+
+    const exerciseRecord = await Exercise.findOne({
+      _id: openExerciseRecord.exercise.toString(),
+    });
     if (!exerciseRecord) {
       return res.status(404).send();
     }
-  
-    const applicationIndex = exerciseRecord.attendees.findIndex(
-      (application) => application._id.toString() === applicationId
-    );
-  
-    if (applicationIndex === -1) {
-      return res.status(404).send();
-    }
-  
-    exerciseRecord.attendees.splice(applicationIndex, 1);
-    await eventRecord.save();
-    res.send({});
 
-    
+    const applicationAlreadyExists = openExerciseRecord.attendees
+      .some(attendee => attendee.teacher.toString() === req.user.user_id.toString());
+    if (applicationAlreadyExists) {
+      return res.status(400).json({
+        error: "Už ste na dané cvičenie prihlásení.",
+      });
+    }
+
+    const maxAttendees = exerciseRecord.maxAttendees;
+
+    const totalAttendees = openExerciseRecord.attendees.reduce(
+      (total, attendee) => total + attendee.numOfAttendees,
+      0
+    );
+
+    if (
+      requestedAttendees > maxAttendees ||
+      totalAttendees + requestedAttendees > maxAttendees
+    ) {
+      return res.status(404).json({
+        error: "Zadaný počet účastníkov prekračuje maximálnu kapacitu.",
+      });
+    }
+
+    const newApplication = {
+      teacher: req.user.user_id,
+      numOfAttendees: requestedAttendees,
+      approvalStatus: APPROVAL_STATUS_ENUM.PENDING,
+      createdAt: new Date(),
+      approvedAt: null,
+    };
+
+    if (!openExerciseRecord.attendees) {
+      openExerciseRecord.attendees = [];
+    }
+
+    openExerciseRecord.attendees.push(newApplication);
+
+    try {
+      await eventRecord.save();
+      res.status(200).send({ message: "Application created" });
+    } catch (err) {
+      throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+    }
+  }
+];
+
+exports.getApplications = async (req, res) => {
+  const currentUser = req.user;
+  try {
+    const events = await Event.find();
+    const exercises = await Exercise.find();
+    const applications = [];
+
+    for (const event of events) {
+      for (const openExercise of event.openExercises) {
+        for (const attendee of openExercise.attendees) {
+          if (attendee.teacher.toString() === currentUser.user_id.toString()) {
+            const eventData = {
+              date: openExercise.date,
+              startTime: openExercise.startTime,
+              numOfAttendees: attendee.numOfAttendees,
+              approvalState: attendee.approvalStatus,
+              eventId: event._id,
+              dateClosing: event.dateClosing,
+              exerciseId: openExercise._id,
+              applicationId: attendee._id,
+              createdAt: attendee.createdAt,
+              approvedAt: attendee.approvedAt,
+            };
+
+            const foundExercise = exercises.find(
+              (e) => e._id.toString() === openExercise.exercise.toString()
+            );
+            if (foundExercise) {
+              eventData.maxAttendees = foundExercise.maxAttendees;
+              eventData.exerciseName = foundExercise.name;
+            }
+
+            applications.push(eventData);
+          }
+        }
+      }
+    }
+
+    res.send(applications);
+  } catch (error) { }
+};
+
+exports.editApplication = async (req, res) => {
+  const { eventId, exerciseId, applicationId } = req.params;
+
+  const eventRecord = await Event.findOne({ _id: eventId });
+  if (!eventRecord) {
+    return res.status(404).send();
+  }
+  const exerciseRecord = eventRecord.openExercises.find(
+    (exercise) => exercise._id.toString() === exerciseId
+  );
+  if (!exerciseRecord) {
+    return res.status(404).send();
+  }
+  const applicationRecord = exerciseRecord.attendees.find(
+    (application) => application._id.toString() === applicationId
+  );
+  if (!applicationRecord) {
+    return res.status(404).send();
+  }
+
+  const updatedApplication = {
+    numOfAttendees: req.body.numOfAttendees,
   };
+
+  const updatedExerciseRecord = exerciseRecord.attendees.map((application) => {
+    if (application._id.toString() === applicationId) {
+      return { ...application, ...updatedApplication };
+    }
+    return application;
+  });
+
+  try {
+    exerciseRecord.attendees = updatedExerciseRecord;
+    await eventRecord.save();
+
+    res.status(200).send({});
+  } catch (error) {
+    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
+  }
+};
+
+exports.deleteApplication = async (req, res) => {
+  const { eventId, exerciseId, applicationId } = req.params;
+
+  const eventRecord = await Event.findOne({ _id: eventId });
+  if (!eventRecord) {
+    return res.status(404).send();
+  }
+
+  const exerciseRecord = eventRecord.openExercises.find(
+    (exercise) => exercise._id.toString() === exerciseId
+  );
+
+  if (!exerciseRecord) {
+    return res.status(404).send();
+  }
+
+  const applicationIndex = exerciseRecord.attendees.findIndex(
+    (application) => application._id.toString() === applicationId
+  );
+
+  if (applicationIndex === -1) {
+    return res.status(404).send();
+  }
+
+  exerciseRecord.attendees.splice(applicationIndex, 1);
+  await eventRecord.save();
+  res.send({});
+
+
+};
