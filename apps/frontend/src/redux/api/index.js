@@ -209,7 +209,7 @@ export const api = createApi({
       invalidatesTags: (result) => (result ? ['Events'] : [])
     }),
     deleteEventExercise: builder.mutation({
-      query: (eventId, exerciseId) => ({
+      query: ({ eventId, exerciseId }) => ({
         url: `/event/removeExercise/${eventId}/${exerciseId}`,
         method: 'DELETE'
       }),
