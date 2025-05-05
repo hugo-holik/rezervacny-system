@@ -1,4 +1,4 @@
-import Aplications from './Aplications';
+import Aplications from './Applications';
 import Calendar from './Calendar';
 import Events from './Events';
 import Exercises from './Exercises';

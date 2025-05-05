@@ -376,39 +376,27 @@ exports.editApplication = async (req, res) => {
   if (!eventRecord) {
     return res.status(404).send();
   }
-  const exerciseRecord = eventRecord.openExercises.find(
-    (exercise) => exercise._id.toString() === exerciseId
-  );
+
+  const exerciseRecord = eventRecord.openExercises.id(exerciseId);
   if (!exerciseRecord) {
     return res.status(404).send();
   }
-  const applicationRecord = exerciseRecord.attendees.find(
-    (application) => application._id.toString() === applicationId
-  );
+
+  const applicationRecord = exerciseRecord.attendees.id(applicationId);
   if (!applicationRecord) {
     return res.status(404).send();
   }
 
-  const updatedApplication = {
-    numOfAttendees: req.body.numOfAttendees,
-  };
-
-  const updatedExerciseRecord = exerciseRecord.attendees.map((application) => {
-    if (application._id.toString() === applicationId) {
-      return { ...application, ...updatedApplication };
-    }
-    return application;
-  });
+  applicationRecord.numOfAttendees = req.body.numOfAttendees;
 
   try {
-    exerciseRecord.attendees = updatedExerciseRecord;
     await eventRecord.save();
-
     res.status(200).send({});
   } catch (error) {
     throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
   }
 };
+
 
 exports.deleteApplication = async (req, res) => {
   const { eventId, exerciseId, applicationId } = req.params;

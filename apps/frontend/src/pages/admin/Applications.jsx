@@ -1,23 +1,66 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteApplicationMutation, useGetApplicationsQuery } from '@app/redux/api';
+import {
+  useDeleteApplicationMutation,
+  useEditApplicationMutation,
+  useGetApplicationsQuery
+} from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   IconButton,
   Paper,
+  TextField,
   Tooltip,
   Typography
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { format } from 'date-fns';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Applications = () => {
   const { data: applications, isLoading, isError } = useGetApplicationsQuery();
   const [deleteApplication] = useDeleteApplicationMutation();
+  const [updateApplication] = useEditApplicationMutation();
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [numOfAttendees, setNumOfAttendees] = useState(1);
+
+  const openEditDialog = (application) => {
+    setSelectedApplication(application);
+    setNumOfAttendees(application.numOfAttendees);
+    setEditDialogOpen(true);
+  };
+
+  const closeEditDialog = () => {
+    setEditDialogOpen(false);
+    setSelectedApplication(null);
+  };
+
+  const handleEditSave = async () => {
+    try {
+      await updateApplication({
+        eventId: selectedApplication.eventId,
+        exerciseId: selectedApplication.exerciseId,
+        applicationId: selectedApplication.applicationId,
+        body: { numOfAttendees: numOfAttendees }
+      }).unwrap();
+      toast.success('Application updated successfully');
+      closeEditDialog();
+    } catch (error) {
+      toast.error('Error updating application', error);
+    }
+  };
 
   const getStatusColor = (status) => {
     if (!status) return 'default';
@@ -78,9 +121,9 @@ const Applications = () => {
       flex: 1,
       renderCell: (params) => (
         <Chip
-          label={params?.value || 'Unknown'}
-          color={getStatusColor(params?.value)}
-          size="small"
+          label={params.value || 'Neznámy'}
+          color={getStatusColor(params.value)}
+          variant="outlined"
         />
       )
     },
@@ -100,10 +143,15 @@ const Applications = () => {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      width: 100,
+      width: 130,
       getActions: (params) => [
+        <Tooltip key="edit" title="Upraviť prihlášku">
+          <IconButton color="primary" onClick={() => openEditDialog(params.row)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>,
         <ConfirmationDialog
-          key={'delete'}
+          key="delete"
           title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
           onAccept={() => handleDeleteApplication(params.row)}
         >
@@ -118,16 +166,10 @@ const Applications = () => {
   ];
 
   const handleDeleteApplication = async (row) => {
-    console.log('Deleting row:', row); // Add this to debug
-    console.log('Deleting row:', row.applicationId); // Add this to debug
-    console.log('Deleting row:', row.exerciseId); // Add this to debug
-    console.log('Deleting row:', row.eventId); // Add this to debug
-
     if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
       toast.error('Missing required IDs for deletion');
       return;
     }
-
     try {
       await deleteApplication({
         eventId: row.eventId,
@@ -136,8 +178,7 @@ const Applications = () => {
       }).unwrap();
       toast.success('Application deleted successfully');
     } catch (error) {
-      toast.error('Error deleting application');
-      console.error('Delete error:', error);
+      toast.error('Error deleting application', error);
     }
   };
 
@@ -164,9 +205,6 @@ const Applications = () => {
           <Typography variant="h4" alignSelf={'center'}>
             Prihlášky
           </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3} justifyContent={'flex-end'} display={'flex'}>
-          {/* Add your "Add Application" button/modal here if needed */}
         </Grid>
       </Grid>
 
@@ -213,6 +251,31 @@ const Applications = () => {
           }}
         />
       </Paper>
+
+      <Dialog open={editDialogOpen} onClose={closeEditDialog}>
+        <DialogTitle>Upraviť počet účastníkov</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Počet účastníkov"
+            type="number"
+            fullWidth
+            value={numOfAttendees}
+            onChange={(e) => setNumOfAttendees(e.target.value)}
+            inputProps={{ min: 1 }}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeEditDialog}>Zrušiť</Button>
+          <Button
+            onClick={handleEditSave}
+            variant="contained"
+            disabled={!numOfAttendees || numOfAttendees < 1}
+          >
+            Uložiť
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
