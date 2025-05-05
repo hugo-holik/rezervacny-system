@@ -8,15 +8,15 @@ const MyAccount = () => {
   const [changeUserPassword, { isLoading: isPasswordChanging }] = useChangeUserPasswordMutation();
 
   const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    password_old: '',
+    password_new: '',
+    password_new_repeat: ''
   });
 
   const [errors, setErrors] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    password_old: '',
+    password_new: '',
+    password_new_repeat: ''
   });
 
   const handleChange = (e) => {
@@ -28,30 +28,28 @@ const MyAccount = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setErrors({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      password_old: '',
+      password_new: '',
+      password_new_repeat: ''
     });
 
     // Frontend validation
-    if (formData.newPassword !== formData.confirmPassword) {
+    if (formData.password_new !== formData.password_new_repeat) {
       setErrors((prev) => ({
         ...prev,
-        confirmPassword: 'Passwords do not match'
+        password_new_repeat: 'Passwords do not match'
       }));
       return;
     }
 
     try {
-      await changeUserPassword({
-        password: formData.newPassword
-      }).unwrap();
-
+      console.log(formData);
+      await changeUserPassword(formData);
       toast.success('Password changed successfully!');
       setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        password_old: '',
+        password_new: '',
+        password_new_repeat: ''
       });
     } catch (error) {
       if (error.data?.fields) {
@@ -81,38 +79,38 @@ const MyAccount = () => {
         <Box component="form" onSubmit={handlePasswordSubmit}>
           <TextField
             label="Current Password"
-            name="currentPassword"
+            name="password_old"
             type="password"
             fullWidth
             variant="outlined"
-            value={formData.currentPassword}
+            value={formData.password_old}
             onChange={handleChange}
-            error={!!errors.currentPassword}
-            helperText={errors.currentPassword}
+            error={!!errors.password_old}
+            helperText={errors.password_old}
             sx={{ mb: 2 }}
           />
           <TextField
             label="New Password"
-            name="newPassword"
+            name="password_new"
             type="password"
             fullWidth
             variant="outlined"
-            value={formData.newPassword}
+            value={formData.password_new}
             onChange={handleChange}
-            error={!!errors.newPassword}
-            helperText={errors.newPassword}
+            error={!!errors.password_new}
+            helperText={errors.password_new}
             sx={{ mb: 2 }}
           />
           <TextField
             label="Confirm New Password"
-            name="confirmPassword"
+            name="password_new_repeat"
             type="password"
             fullWidth
             variant="outlined"
-            value={formData.confirmPassword}
+            value={formData.password_new_repeat}
             onChange={handleChange}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword}
+            error={!!errors.password_new_repeat}
+            helperText={errors.password_new_repeat}
             sx={{ mb: 2 }}
           />
           <Button type="submit" variant="contained" fullWidth disabled={isPasswordChanging}>
