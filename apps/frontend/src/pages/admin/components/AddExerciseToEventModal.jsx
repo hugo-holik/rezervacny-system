@@ -15,6 +15,10 @@ import {
   Select,
   TextField
 } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 
@@ -50,7 +54,7 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const formatDateTime = (isoDate) => {
     const date = new Date(isoDate);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   const handleSubmit = async () => {
@@ -99,52 +103,63 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Pridaj otvorené cvičenie</DialogTitle>
-      <DialogContent>
-        <TextField
-          fullWidth
-          label="Dátum"
-          type="date"
-          margin="normal"
-          InputLabelProps={{ shrink: true }}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="exercise-select-label">Vyber cvičenie</InputLabel>
-          <Select
-            labelId="exercise-select-label"
-            value={exerciseId}
-            label="Vyber cvičenie"
-            onChange={(e) => setExerciseId(e.target.value)}
-          >
-            {filteredExercises.length === 0 ? (
-              <MenuItem disabled>Žiadne cvičenia v tomto dátume</MenuItem>
-            ) : (
-              filteredExercises.map((exercise) => (
-                <MenuItem key={exercise._id} value={exercise._id}>
-                  {exercise.name} – {formatDateTime(exercise.startTimes?.[0])}
-                </MenuItem>
-              ))
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Pridaj otvorené cvičenie</DialogTitle>
+        <DialogContent>
+          <DatePicker
+            sx={{
+              marginTop: 2,
+              width: '100%',
+              '& .MuiInputBase-root': {
+                height: '56px' // Match standard TextField height
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(0, 0, 0, 0.23)' // Match default border
+              }
+            }}
+            label="Dátum"
+            value={date ? dayjs(date) : null}
+            onChange={(newValue) => setDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
+            renderInput={(params) => (
+              <TextField {...params} fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
             )}
-          </Select>
-        </FormControl>
-        <TextField
-          fullWidth
-          label="Poznámka"
-          margin="normal"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Zrušiť</Button>
-        <Button onClick={handleSubmit} variant="contained">
-          Pridať
-        </Button>
-      </DialogActions>
-    </Dialog>
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="exercise-select-label">Vyber cvičenie</InputLabel>
+            <Select
+              labelId="exercise-select-label"
+              value={exerciseId}
+              label="Vyber cvičenie"
+              onChange={(e) => setExerciseId(e.target.value)}
+            >
+              {filteredExercises.length === 0 ? (
+                <MenuItem disabled>Žiadne cvičenia v tomto dátume</MenuItem>
+              ) : (
+                filteredExercises.map((exercise) => (
+                  <MenuItem key={exercise._id} value={exercise._id}>
+                    {exercise.name} – {formatDateTime(exercise.startTimes?.[0])}
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            label="Poznámka"
+            margin="normal"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Zrušiť</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            Pridať
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </LocalizationProvider>
   );
 };
 
