@@ -110,14 +110,7 @@ const Exercises = () => {
       getActions: (params) => {
         const isPrivileged = roleCheck || currentUser.isAdmin;
 
-        const actions = [
-          <Tooltip key="register" title="Prihlasiť sa">
-            <IconButton onClick={() => handleRowClick(params) /* TODO: vymenit za prihlašku*/}>
-              <AppRegistrationIcon />
-            </IconButton>
-          </Tooltip>
-        ];
-
+        const actions = [];
         if (isPrivileged) {
           actions.unshift(
             // Add privileged actions at the beginning
