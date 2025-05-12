@@ -1,3 +1,5 @@
+'use client';
+
 import {
   useAddEventExerciseMutation,
   useGetAllEventsQuery,
@@ -13,7 +15,8 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField
+  TextField,
+  Typography
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -35,6 +38,10 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const eventStart = new Date(eventData.datefrom);
   const eventEnd = new Date(eventData.dateto);
   eventEnd.setHours(23, 59, 59, 999);
+
+  // Convert to dayjs for the date picker
+  const minDate = dayjs(eventData.datefrom);
+  const maxDate = dayjs(eventData.dateto);
 
   const filteredExercises = exercises.filter((exercise) => {
     const rawDate = exercise.startTimes?.[0];
@@ -80,7 +87,6 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
           }
         ],
         status: 'čaká na schválenie',
-        // status: 'schválené',
         note
       };
 
@@ -92,14 +98,29 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
     }
   };
 
+  const isDateInRange = (date) => {
+    if (!date) return true;
+    const selectedDate = dayjs(date);
+
+    // Fix the logic to include both start and end dates
+    return (
+      (selectedDate.isAfter(minDate) || selectedDate.isSame(minDate, 'day')) &&
+      (selectedDate.isBefore(maxDate) || selectedDate.isSame(maxDate, 'day'))
+    );
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle>Pridaj otvorené cvičenie</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1, mb: 1 }}>
+            Povolený rozsah dátumov: {dayjs(eventData.datefrom).format('DD.MM.YYYY')} -{' '}
+            {dayjs(eventData.dateto).format('DD.MM.YYYY')}
+          </Typography>
           <DatePicker
             sx={{
-              marginTop: 2,
+              marginTop: 1,
               width: '100%',
               '& .MuiInputBase-root': {
                 height: '56px' // Match standard TextField height
@@ -111,6 +132,9 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
             label="Dátum"
             value={date ? dayjs(date) : null}
             onChange={(newValue) => setDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
+            minDate={minDate}
+            maxDate={maxDate}
+            shouldDisableDate={(date) => !isDateInRange(date)}
             renderInput={(params) => (
               <TextField {...params} fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
             )}
@@ -144,7 +168,11 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Zrušiť</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={!date || !exerciseId || !isDateInRange(date)}
+          >
             Pridať
           </Button>
         </DialogActions>
