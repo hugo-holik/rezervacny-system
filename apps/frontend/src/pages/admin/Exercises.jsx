@@ -158,7 +158,7 @@ const Exercises = () => {
           getRowId={(row) => row._id}
           pageSizeOptions={[10, 20, 50]}
           initialState={{
-            density: 'compact',
+            density: 'standard',
             pagination: {
               paginationModel: {
                 pageSize: 20
