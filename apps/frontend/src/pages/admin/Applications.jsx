@@ -4,6 +4,8 @@ import {
   useEditApplicationMutation,
   useGetApplicationsQuery
 } from '@app/redux/api';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -62,14 +64,51 @@ const Applications = () => {
     }
   };
 
+  const handleApproveApplication = async (row) => {
+    if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
+      toast.error('Missing required IDs for approval');
+      return;
+    }
+    try {
+      await editApplication({
+        eventId: row.eventId,
+        exerciseId: row.exerciseId,
+        applicationId: row.applicationId,
+        approvalState: 'schválené',
+        approvedAt: new Date().toISOString()
+      }).unwrap();
+      toast.success('Application approved successfully');
+    } catch (error) {
+      toast.error('Error approving application', error);
+    }
+  };
+
+  const handleRejectApplication = async (row) => {
+    if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
+      toast.error('Missing required IDs for rejection');
+      return;
+    }
+    try {
+      await editApplication({
+        eventId: row.eventId,
+        exerciseId: row.exerciseId,
+        applicationId: row.applicationId,
+        approvalState: 'zamietnuté'
+      }).unwrap();
+      toast.success('Application rejected successfully');
+    } catch (error) {
+      toast.error('Error rejecting application', error);
+    }
+  };
+
   const getStatusColor = (status) => {
     if (!status) return 'default';
     switch (status.toLowerCase()) {
       case 'čaká na schválenie':
         return 'warning';
-      case 'approved':
+      case 'schválené':
         return 'success';
-      case 'rejected':
+      case 'zamietnuté':
         return 'error';
       default:
         return 'default';
@@ -143,25 +182,60 @@ const Applications = () => {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      width: 130,
-      getActions: (params) => [
-        <Tooltip key="edit" title="Upraviť prihlášku">
-          <IconButton color="primary" onClick={() => openEditDialog(params.row)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>,
-        <ConfirmationDialog
-          key="delete"
-          title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
-          onAccept={() => handleDeleteApplication(params.row)}
-        >
-          <Tooltip title="Delete application">
-            <IconButton size="small">
-              <DeleteIcon fontSize="small" />
+      width: 200,
+      getActions: (params) => {
+        const isPending =
+          params.row.approvalState === 'čaká na schválenie' || !params.row.approvalState;
+
+        const actions = [
+          <Tooltip key="edit" title="Upraviť prihlášku">
+            <IconButton color="default" onClick={() => openEditDialog(params.row)}>
+              <EditIcon />
             </IconButton>
-          </Tooltip>
-        </ConfirmationDialog>
-      ]
+          </Tooltip>,
+          <ConfirmationDialog
+            key="delete"
+            title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
+            onAccept={() => handleDeleteApplication(params.row)}
+          >
+            <Tooltip title="Delete application">
+              <IconButton color="default">
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </ConfirmationDialog>
+        ];
+
+        // Only show approve/reject buttons for pending applications
+        if (isPending) {
+          actions.unshift(
+            <ConfirmationDialog
+              key="reject"
+              title={`Reject application for ${params?.row?.exerciseName || 'this exercise'}?`}
+              onAccept={() => handleRejectApplication(params.row)}
+            >
+              <Tooltip title="Reject application">
+                <IconButton color="default">
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </ConfirmationDialog>,
+            <ConfirmationDialog
+              key="approve"
+              title={`Approve application for ${params?.row?.exerciseName || 'this exercise'}?`}
+              onAccept={() => handleApproveApplication(params.row)}
+            >
+              <Tooltip title="Approve application">
+                <IconButton color="default">
+                  <CheckCircleIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </ConfirmationDialog>
+          );
+        }
+
+        return actions;
+      }
     }
   ];
 

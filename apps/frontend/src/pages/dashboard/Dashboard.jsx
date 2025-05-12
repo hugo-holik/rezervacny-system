@@ -19,6 +19,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
+import Applications from '../admin/Applications';
 import Events from '../admin/Events';
 import Exercises from '../admin/Exercises'; // Import UsersList component
 import ExternalSchools from '../admin/ExternalSchools'; // Import ExternalSchools component
@@ -204,6 +205,10 @@ const Dashboard = () => {
 
       <Box sx={{ mt: 4 }}>
         <Events />
+      </Box>
+
+      <Box sx={{ mt: 4 }}>
+        <Applications />
       </Box>
     </Container>
   );

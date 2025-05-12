@@ -387,11 +387,25 @@ exports.editApplication = async (req, res) => {
     return res.status(404).send();
   }
 
-  const parsedNum = Number(req.body.numOfAttendees);
-  if (isNaN(parsedNum)) {
-    return res.status(400).json({ message: 'Invalid number of attendees' });
+  // Update numOfAttendees if provided
+  if (req.body.numOfAttendees !== undefined) {
+    const parsedNum = Number(req.body.numOfAttendees);
+    if (isNaN(parsedNum)) {
+      return res.status(400).json({ message: 'Invalid number of attendees' });
+    }
+    applicationRecord.numOfAttendees = parsedNum;
   }
-  applicationRecord.numOfAttendees = parsedNum;
+
+  // Update approvalState if provided
+  if (req.body.approvalState !== undefined) {
+    applicationRecord.approvalStatus = req.body.approvalState;
+  }
+
+  // Update approvedAt if provided
+  if (req.body.approvedAt !== undefined) {
+    applicationRecord.approvedAt = req.body.approvedAt;
+  }
+
   try {
     await eventRecord.save();
     res.status(200).send({});

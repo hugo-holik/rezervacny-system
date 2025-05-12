@@ -159,13 +159,13 @@ const EventDetail = () => {
         return (
           <Box display="flex" gap={1}>
             <Tooltip title="Prihlásiť sa">
-              <IconButton color="primary" onClick={() => handleOpenApplicationDialog(params.row)}>
+              <IconButton color="default" onClick={() => handleOpenApplicationDialog(params.row)}>
                 <HowToRegIcon />
               </IconButton>
             </Tooltip>
             {isPrivileged && isPendingApproval && (
               <Tooltip title="Potvrdiť otvorené cvičenie">
-                <IconButton color="success" onClick={() => handleApproveExercise(params.row._id)}>
+                <IconButton color="default" onClick={() => handleApproveExercise(params.row._id)}>
                   <CheckCircleIcon />
                 </IconButton>
               </Tooltip>
@@ -176,7 +176,7 @@ const EventDetail = () => {
                 onAccept={() => handleDeleteExercise(params.row._id)}
               >
                 <Tooltip title="Odstrániť cvičenie">
-                  <IconButton color="error">
+                  <IconButton color="default">
                     <DeleteIcon />
                   </IconButton>
                 </Tooltip>
