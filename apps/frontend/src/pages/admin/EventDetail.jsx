@@ -1,11 +1,15 @@
+'use client';
+
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteEventExerciseMutation,
+  useEditEventExerciseMutation,
   useGetEventByIdQuery,
   useGetUserMeQuery,
   useSendApplicationMutation
 } from '@app/redux/api';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import {
@@ -47,6 +51,7 @@ const EventDetail = () => {
   const { data: event, isLoading } = useGetEventByIdQuery({ Id: eventId });
   const [deleteEventExercise] = useDeleteEventExerciseMutation();
   const [sendApplication] = useSendApplicationMutation();
+  const [editEventExercise] = useEditEventExerciseMutation();
 
   // State for application dialog
   const [openApplicationDialog, setOpenApplicationDialog] = useState(false);
@@ -81,13 +86,27 @@ const EventDetail = () => {
       await sendApplication({
         eventId,
         exerciseId: selectedExercise._id,
-        numOfAttendees: parseInt(numOfAttendees)
+        numOfAttendees: Number.parseInt(numOfAttendees)
       }).unwrap();
       toast.success('Prihlásenie bolo úspešné');
       handleCloseApplicationDialog();
     } catch (error) {
       toast.error('Chyba pri prihlasovaní');
       console.error('Application error:', error);
+    }
+  };
+
+  const handleApproveExercise = async (exerciseId) => {
+    try {
+      await editEventExercise({
+        eventId,
+        exerciseId,
+        status: 'schválené'
+      }).unwrap();
+      toast.success('Cvičenie bolo úspešne schválené');
+    } catch (error) {
+      toast.error('Chyba pri schvaľovaní cvičenia');
+      console.error('Approve error:', error);
     }
   };
 
@@ -135,6 +154,7 @@ const EventDetail = () => {
       disableColumnMenu: true,
       renderCell: (params) => {
         const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
+        const isPendingApproval = params.row.status === 'čaká na schválenie';
 
         return (
           <Box display="flex" gap={1}>
@@ -143,6 +163,13 @@ const EventDetail = () => {
                 <HowToRegIcon />
               </IconButton>
             </Tooltip>
+            {isPrivileged && isPendingApproval && (
+              <Tooltip title="Potvrdiť otvorené cvičenie">
+                <IconButton color="success" onClick={() => handleApproveExercise(params.row._id)}>
+                  <CheckCircleIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             {isPrivileged && (
               <ConfirmationDialog
                 title={`Naozaj chcete odstrániť cvičenie ${params.row.exerciseName}?`}
