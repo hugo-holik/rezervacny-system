@@ -295,7 +295,7 @@ const Applications = () => {
           getRowId={(row) => row?.applicationId}
           pageSizeOptions={[10, 20, 50]}
           initialState={{
-            density: 'comfortable',
+            density: 'standard',
             pagination: {
               paginationModel: {
                 pageSize: 20
