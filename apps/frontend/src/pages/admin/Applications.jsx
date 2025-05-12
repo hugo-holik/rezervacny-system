@@ -129,31 +129,31 @@ const Applications = () => {
   const columns = [
     {
       field: 'exerciseName',
-      headerName: 'Exercise Name',
+      headerName: 'Názov cvičenia',
       flex: 1,
       minWidth: 150
     },
     {
       field: 'date',
-      headerName: 'Date',
+      headerName: 'Dátum',
       flex: 1,
       valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy')
     },
     {
       field: 'startTime',
-      headerName: 'Start Time',
+      headerName: 'Začiatok',
       flex: 1,
       valueFormatter: (params) => formatDate(params, 'HH:mm')
     },
     {
       field: 'numOfAttendees',
-      headerName: 'Attendees',
+      headerName: 'Počet účastníkov',
       flex: 1,
       type: 'number'
     },
     {
       field: 'maxAttendees',
-      headerName: 'Max Attendees',
+      headerName: 'Max. počet účastníkov',
       flex: 1,
       type: 'number'
     },
@@ -171,20 +171,20 @@ const Applications = () => {
     },
     {
       field: 'createdAt',
-      headerName: 'Created At',
+      headerName: 'Podané o',
       flex: 1,
       valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
     },
     {
       field: 'approvedAt',
-      headerName: 'Approved At',
+      headerName: 'Potvrdené o',
       flex: 1,
       valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
     },
     {
       field: 'actions',
       type: 'actions',
-      headerName: 'Actions',
+      headerName: 'Akcie',
       width: 200,
       getActions: (params) => {
         const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
@@ -203,7 +203,7 @@ const Applications = () => {
             title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
             onAccept={() => handleDeleteApplication(params.row)}
           >
-            <Tooltip title="Delete application">
+            <Tooltip title="Odstrániť prihlášku">
               <IconButton color="default">
                 <DeleteIcon fontSize="small" />
               </IconButton>
@@ -219,7 +219,7 @@ const Applications = () => {
               title={`Reject application for ${params?.row?.exerciseName || 'this exercise'}?`}
               onAccept={() => handleRejectApplication(params.row)}
             >
-              <Tooltip title="Reject application">
+              <Tooltip title="Odmietnuť prihlášku">
                 <IconButton color="default">
                   <CancelIcon fontSize="small" />
                 </IconButton>
@@ -230,7 +230,7 @@ const Applications = () => {
               title={`Approve application for ${params?.row?.exerciseName || 'this exercise'}?`}
               onAccept={() => handleApproveApplication(params.row)}
             >
-              <Tooltip title="Approve application">
+              <Tooltip title="Potvrdiť prihlášku">
                 <IconButton color="default">
                   <CheckCircleIcon fontSize="small" />
                 </IconButton>
