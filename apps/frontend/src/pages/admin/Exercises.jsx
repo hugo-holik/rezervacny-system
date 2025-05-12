@@ -51,15 +51,7 @@ const Exercises = () => {
   };
 
   const userMap = users.reduce((acc, user) => {
-    if (currentUser.role === 'Zamestnanec UNIZA') {
-      if (user._id === currentUser._id) {
-        acc[user._id] = user.name;
-      }
-    } else {
-      if (user.role === 'Zamestnanec UNIZA') {
-        acc[user._id] = user.name;
-      }
-    }
+    acc[user._id] = user.name;
     return acc;
   }, {});
 
@@ -93,12 +85,12 @@ const Exercises = () => {
       field: 'leads',
       headerName: 'Vyučujúci',
       flex: 1,
-      valueGetter: (params) => {
-        const leadIds = params ?? []; // Safely get the leads array, default to []
-        return leadIds
-          .map((id) => userMap[id])
-          .filter(Boolean)
-          .join(', ');
+      renderCell: (params) => {
+        const leadIds = params.row?.leads;
+        if (Array.isArray(leadIds) && leadIds.length > 0) {
+          return leadIds.map((id) => userMap[id] ?? `Neznámy (${id.slice(0, 6)})`).join(', ');
+        }
+        return '-';
       }
     },
     { field: 'color', headerName: 'Farba', flex: 1 },
