@@ -2,7 +2,8 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteApplicationMutation,
   useEditApplicationMutation,
-  useGetApplicationsQuery
+  useGetApplicationsQuery,
+  useGetUserMeQuery
 } from '@app/redux/api';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -30,6 +31,8 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Applications = () => {
+  const { data: currentUser } = useGetUserMeQuery(); // Add this line to get current user
+
   const { data: applications, isLoading, isError } = useGetApplicationsQuery();
   const [deleteApplication] = useDeleteApplicationMutation();
   const [editApplication] = useEditApplicationMutation();
@@ -184,6 +187,8 @@ const Applications = () => {
       headerName: 'Actions',
       width: 200,
       getActions: (params) => {
+        const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
+
         const isPending =
           params.row.approvalState === 'čaká na schválenie' || !params.row.approvalState;
 
@@ -207,7 +212,7 @@ const Applications = () => {
         ];
 
         // Only show approve/reject buttons for pending applications
-        if (isPending) {
+        if (isPending && isPrivileged) {
           actions.unshift(
             <ConfirmationDialog
               key="reject"
