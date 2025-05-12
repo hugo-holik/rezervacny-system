@@ -79,8 +79,8 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
             approvedAt: null
           }
         ],
-        // status: 'čaká na schválenie',
-        status: 'schválené',
+        status: 'čaká na schválenie',
+        // status: 'schválené',
         note
       };
 

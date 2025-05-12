@@ -387,8 +387,11 @@ exports.editApplication = async (req, res) => {
     return res.status(404).send();
   }
 
-  applicationRecord.numOfAttendees = req.body.numOfAttendees;
-
+  const parsedNum = Number(req.body.numOfAttendees);
+  if (isNaN(parsedNum)) {
+    return res.status(400).json({ message: 'Invalid number of attendees' });
+  }
+  applicationRecord.numOfAttendees = parsedNum;
   try {
     await eventRecord.save();
     res.status(200).send({});

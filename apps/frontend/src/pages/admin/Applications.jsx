@@ -30,7 +30,7 @@ import { toast } from 'react-toastify';
 const Applications = () => {
   const { data: applications, isLoading, isError } = useGetApplicationsQuery();
   const [deleteApplication] = useDeleteApplicationMutation();
-  const [updateApplication] = useEditApplicationMutation();
+  const [editApplication] = useEditApplicationMutation();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
@@ -49,11 +49,11 @@ const Applications = () => {
 
   const handleEditSave = async () => {
     try {
-      await updateApplication({
+      await editApplication({
         eventId: selectedApplication.eventId,
         exerciseId: selectedApplication.exerciseId,
         applicationId: selectedApplication.applicationId,
-        body: { numOfAttendees: numOfAttendees }
+        numOfAttendees: Number(numOfAttendees)
       }).unwrap();
       toast.success('Application updated successfully');
       closeEditDialog();
