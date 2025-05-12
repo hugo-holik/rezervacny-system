@@ -87,33 +87,45 @@ exports.edit = [
 //   },
 // ];
 exports.changePassword = async (req, res) => {
-  const { error } = changePasswordSchema.validate(req);
+  const { error } = changePasswordSchema.validate(req.body)
 
   if (error) {
     return res.status(430).json({
-      errors: error.details.map(err => ({
+      errors: error.details.map((err) => ({
         message: err.message,
-        field: err.path[0]
-      }))
-    });
+        field: err.path[0],
+      })),
+    })
   }
 
-  const { password } = req.body.password_new_repeat;
+  const password = req.body.password_new
 
   if (req.user.user_id) {
     try {
-      const user = await User.findOne({ _id: req.user.user_id });
+      const user = await User.findOne({ _id: req.user.user_id })
       if (user) {
-        user.setPassword(password);
-        await user.save();
-        return res.status(200).send({ message: req.t("messages.password_change_success") });
+        // Verify old password first
+        if (!user.verifyPassword(req.body.password_old)) {
+          return res.status(430).json({
+            errors: [
+              {
+                message: "Current password is incorrect",
+                field: "password_old",
+              },
+            ],
+          })
+        }
+
+        user.setPassword(password)
+        await user.save()
+        return res.status(200).send({ message: req.t("messages.password_change_success") })
       } else {
-        return throwError(req.t("messages.user_not_found"), 424);
+        return throwError(req.t("messages.user_not_found"), 424)
       }
     } catch (err) {
-      return throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
+      return throwError(`${req.t("messages.database_error")}: ${err.message}`, 500)
     }
   } else {
-    return throwError(req.t("messages.invalid_user"), 400);
+    return throwError(req.t("messages.invalid_user"), 400)
   }
-};
+}

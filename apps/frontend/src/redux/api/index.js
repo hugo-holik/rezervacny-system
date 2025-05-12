@@ -27,7 +27,7 @@ export const api = createApi({
       query: (data) => ({
         url: '/user/changePassword',
         method: 'PUT',
-        body: data.data
+        body: data
       }),
       transformErrorResponse: (response) => {
         // Handle array of errors or single error message

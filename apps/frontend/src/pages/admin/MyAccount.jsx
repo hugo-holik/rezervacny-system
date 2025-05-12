@@ -1,3 +1,5 @@
+'use client';
+
 import { useChangeUserPasswordMutation, useGetUserMeQuery } from '@app/redux/api';
 import { Box, Button, Card, Container, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
@@ -43,8 +45,7 @@ const MyAccount = () => {
     }
 
     try {
-      console.log(formData);
-      await changeUserPassword(formData);
+      await changeUserPassword(formData).unwrap();
       toast.success('Password changed successfully!');
       setFormData({
         password_old: '',
@@ -52,13 +53,15 @@ const MyAccount = () => {
         password_new_repeat: ''
       });
     } catch (error) {
-      if (error.data?.fields) {
+      console.error('Password change error:', error);
+
+      if (error.fields) {
         // Handle field-specific errors
-        setErrors(error.data.fields);
+        setErrors(error.fields);
       }
 
       // Show all error messages
-      const errorMessages = error.data?.messages || ['Failed to change password'];
+      const errorMessages = error.messages || ['Failed to change password'];
       errorMessages.forEach((msg) => toast.error(msg));
     }
   };
