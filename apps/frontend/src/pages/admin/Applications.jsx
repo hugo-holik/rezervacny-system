@@ -2,8 +2,7 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteApplicationMutation,
   useEditApplicationMutation,
-  useGetApplicationsQuery,
-  useGetUserMeQuery
+  useGetApplicationsQuery
 } from '@app/redux/api';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -31,7 +30,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Applications = () => {
-  const { data: currentUser } = useGetUserMeQuery(); // Add this line to get current user
+  // const { data: currentUser } = useGetUserMeQuery();
 
   const { data: applications, isLoading, isError } = useGetApplicationsQuery();
   const [deleteApplication] = useDeleteApplicationMutation();
@@ -130,19 +129,18 @@ const Applications = () => {
     {
       field: 'exerciseName',
       headerName: 'Názov cvičenia',
-      flex: 1,
-      minWidth: 150
+      width: 100
     },
     {
       field: 'date',
       headerName: 'Dátum',
-      flex: 1,
+      width: 100,
       valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy')
     },
     {
       field: 'startTime',
       headerName: 'Začiatok',
-      flex: 1,
+      width: 80,
       valueFormatter: (params) => formatDate(params, 'HH:mm')
     },
     {
@@ -182,16 +180,54 @@ const Applications = () => {
       valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
     },
     {
-      field: 'actions',
-      type: 'actions',
-      headerName: 'Akcie',
-      width: 200,
-      getActions: (params) => {
-        const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
-
+      field: 'approvalActions', // New column for approve/reject actions
+      headerName: 'Schváliť/Odmietnuť',
+      width: 100,
+      renderCell: (params) => {
         const isPending =
           params.row.approvalState === 'čaká na schválenie' || !params.row.approvalState;
 
+        if (isPending) {
+          return (
+            <>
+              <ConfirmationDialog
+                key="approve"
+                title={`Potvrdiť prihlášku pre ${params?.row?.exerciseName || 'toto cvičenie'}?`}
+                onAccept={() => handleApproveApplication(params.row)}
+              >
+                <Tooltip title="Potvrdiť prihlášku">
+                  <IconButton color="default">
+                    <CheckCircleIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </ConfirmationDialog>
+
+              <ConfirmationDialog
+                key="reject"
+                title={`Odmietnuť prihlášku pre ${params?.row?.exerciseName || 'toto cvičenie'}?`}
+                onAccept={() => handleRejectApplication(params.row)}
+              >
+                <Tooltip title="Odmietnuť prihlášku">
+                  <IconButton color="default">
+                    <CancelIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </ConfirmationDialog>
+            </>
+          );
+        }
+        return null; // Nothing if not pending
+      }
+    },
+    {
+      field: 'actions',
+      headerName: 'Akcie',
+      type: 'actions',
+      width: 180,
+      getActions: (params) => {
+        // const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
+
+        // Actions only for non-pending statuses (edit/delete)
         const actions = [
           <Tooltip key="edit" title="Upraviť prihlášku">
             <IconButton color="default" onClick={() => openEditDialog(params.row)}>
@@ -211,35 +247,7 @@ const Applications = () => {
           </ConfirmationDialog>
         ];
 
-        // Only show approve/reject buttons for pending applications
-        if (isPending && isPrivileged) {
-          actions.unshift(
-            <ConfirmationDialog
-              key="reject"
-              title={`Reject application for ${params?.row?.exerciseName || 'this exercise'}?`}
-              onAccept={() => handleRejectApplication(params.row)}
-            >
-              <Tooltip title="Odmietnuť prihlášku">
-                <IconButton color="default">
-                  <CancelIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </ConfirmationDialog>,
-            <ConfirmationDialog
-              key="approve"
-              title={`Approve application for ${params?.row?.exerciseName || 'this exercise'}?`}
-              onAccept={() => handleApproveApplication(params.row)}
-            >
-              <Tooltip title="Potvrdiť prihlášku">
-                <IconButton color="default">
-                  <CheckCircleIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </ConfirmationDialog>
-          );
-        }
-
-        return actions;
+        return actions; // Only show edit/delete actions if it's not pending
       }
     }
   ];
