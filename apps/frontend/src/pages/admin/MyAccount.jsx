@@ -8,7 +8,6 @@ import { toast } from 'react-toastify';
 const MyAccount = () => {
   const { data: user, isLoading: isUserLoading } = useGetUserMeQuery();
   const [changeUserPassword, { isLoading: isPasswordChanging }] = useChangeUserPasswordMutation();
-  console.log('user:', user);
 
   const [formData, setFormData] = useState({
     password_old: '',
@@ -82,6 +81,7 @@ const MyAccount = () => {
         </Typography>
         <Box>
           <Typography><strong>Meno:</strong> {user?.name || 'N/A'}</Typography>
+          <Typography><strong>Rola:</strong> {user?.role || 'N/A'}</Typography>
           <Typography><strong>Email:</strong> {user?.email || 'N/A'}</Typography>
           <Typography>
             <strong>Účet vytvorený:</strong>{' '}

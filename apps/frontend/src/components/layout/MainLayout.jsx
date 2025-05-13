@@ -81,8 +81,8 @@ const MainLayout = ({ children }) => {
     closeProfileMenu();
     navigate('/auth/login');
   };
+/*
 
-  const drawerOption = [];
 
   if (user?.isAdmin) {
     drawerOption.push(
@@ -92,6 +92,8 @@ const MainLayout = ({ children }) => {
       { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Navigácia', type: 'header' },
       { title: 'Používatelia', navTo: '/admin/users', icon: <GroupIcon /> },
+      { title: 'Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
+      { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
       { title: 'Externé školy', navTo: '/admin/external-schools', icon: <CorporateFareIcon /> }
     );
   }
@@ -100,8 +102,6 @@ const MainLayout = ({ children }) => {
     { title: 'Cvičenia', navTo: '/admin/exercises', icon: <WorkIcon /> },
     { title: 'Udalosti', navTo: '/admin/events', icon: <EventIcon /> },
     { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
-    { title: 'Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
-    { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
     { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
   ];
 
@@ -114,7 +114,62 @@ const MainLayout = ({ children }) => {
     drawerOption.push(...commonOptions);
   } else {
     drawerOption.push(...commonOptions);
+  */
+  const drawerOption = [];
+
+  if (user?.isAdmin) {
+    drawerOption.push(
+      { title: 'Správca', type: 'header' },
+      { title: 'Panel správcu', navTo: '/dashboard', icon: <AdminPanelSettingsIcon /> },
+      { title: 'Domov', type: 'header' },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
+      { title: 'Navigácia', type: 'header' },
+      { title: 'Používatelia', navTo: '/admin/users', icon: <GroupIcon /> },
+      { title: 'Externé školy', navTo: '/admin/external-schools', icon: <CorporateFareIcon /> },
+      { title: 'Cvičenia', navTo: '/admin/exercises', icon: <WorkIcon /> },
+      { title: 'Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
+      { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
+      { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+      { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
+    );
+  } else if (user?.role === 'Externý učiteľ') {
+    drawerOption.push(
+      { title: 'Domov', type: 'header' },
+      { title: 'Otvorené cvičenia', navTo: '/exercises', icon: <WorkIcon /> },
+      { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
+      { title: 'Moje prihlášky', navTo: '/applications', icon: <ChecklistIcon /> },
+      { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+      { title: 'História', navTo: '/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/info', icon: <HelpIcon /> }
+    );
+  } else if (user?.role === 'Zamestnanec UNIZA') {
+    drawerOption.push(
+      { title: 'Domov', type: 'header' },
+      { title: 'Moje cvičenia', navTo: '/exercises', icon: <WorkIcon /> },
+      { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
+      { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+      { title: 'História', navTo: '/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/info', icon: <HelpIcon /> }
+    );
+  } else if (user?.role === 'Správca cvičení') {
+    drawerOption.push(
+      { title: 'Správca', type: 'header' },
+      { title: 'Panel správcu', navTo: '/dashboard', icon: <AdminPanelSettingsIcon /> },
+      { title: 'Domov', type: 'header' },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
+      { title: 'Navigácia', type: 'header' },
+      { title: 'Používatelia', navTo: '/admin/users', icon: <GroupIcon /> },
+      { title: 'Externé školy', navTo: '/admin/external-schools', icon: <CorporateFareIcon /> },
+      { title: 'Cvičenia', navTo: '/admin/exercises', icon: <WorkIcon /> },
+      { title: 'Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
+      { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
+      { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+      { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
+    );
   }
+
 
   const drawer = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -184,7 +239,7 @@ const MainLayout = ({ children }) => {
             Správa predmetov
           </Typography>
           <Button color="inherit" onClick={openProfileMenu} startIcon={<AccountCircleIcon />}>
-            {matched && replaceDiacritics(user?.fullName || '')}
+            {matched && replaceDiacritics(user?.name || '')}
           </Button>
           <ProfileMenu
             open={profileMenuOpen}

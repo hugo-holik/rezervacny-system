@@ -96,7 +96,13 @@ const Events = () => {
         {isLoading ? (
           <Typography>Načítavam...</Typography>
         ) : (
-          events?.map((event) => (
+          (events || [])
+            .filter(event => {
+              if (currentUser.role === 'Externý učiteľ') {
+              return event.published;
+            }
+            return true;
+          }).map((event) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={event._id}>
               <Card
                 sx={{

@@ -30,6 +30,10 @@ const Exercises = () => {
   const [selectedExercise, setSelectedExercise] = useState(null);
 
   const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
+  const currentUserId = currentUser._id;
+
+  const filterExercises = currentUser?.isAdmin || currentUser.role === 'Správca cvičení'
+    ? data : data?.filter((exercise) => exercise.leads.includes(currentUserId));
 
   const onRemoveHandler = async (id) => {
     if (!id) {
@@ -153,7 +157,7 @@ const Exercises = () => {
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading || usersLoading}
-          rows={data || []}
+          rows={filterExercises || []}
           columns={columns}
           getRowId={(row) => row._id}
           pageSizeOptions={[10, 20, 50]}
