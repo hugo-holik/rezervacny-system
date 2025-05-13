@@ -135,22 +135,24 @@ const MainLayout = ({ children }) => {
     );
   } else if (user?.role === 'Externý učiteľ') {
     drawerOption.push(
+      { title: 'Správa účtu', type: 'header' },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Domov', type: 'header' },
-      { title: 'Otvorené cvičenia', navTo: '/exercises', icon: <WorkIcon /> },
       { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
-      { title: 'Moje prihlášky', navTo: '/applications', icon: <ChecklistIcon /> },
       { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
-      { title: 'História', navTo: '/history', icon: <HistoryIcon /> },
-      { title: 'Info', navTo: '/info', icon: <HelpIcon /> }
+      { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
     );
   } else if (user?.role === 'Zamestnanec UNIZA') {
     drawerOption.push(
+      { title: 'Správa účtu', type: 'header' },
+      { title: 'Môj účet', navTo: '/admin/account', icon: <AccountCircleIcon /> },
       { title: 'Domov', type: 'header' },
-      { title: 'Moje cvičenia', navTo: '/exercises', icon: <WorkIcon /> },
+      { title: 'Moje cvičenia', navTo: '/admin/exercises', icon: <WorkIcon /> },
       { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
       { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
-      { title: 'História', navTo: '/history', icon: <HistoryIcon /> },
-      { title: 'Info', navTo: '/info', icon: <HelpIcon /> }
+      { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
+      { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
     );
   } else if (user?.role === 'Správca cvičení') {
     drawerOption.push(
