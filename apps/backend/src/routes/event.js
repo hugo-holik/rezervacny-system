@@ -11,6 +11,7 @@ const {
   sendApplication,
   getApplications,
   getAllApplications,
+  getColleaguesApplications,
   editApplication,
   deleteApplication,
   updateAttendeeStatus,
@@ -23,6 +24,7 @@ const router = express.Router();
 router.post("/sendApplication/:eventId/:exerciseId", sendApplication);
 router.get("/getApplications", getApplications);
 router.get("/getAllApplications", getAllApplications);
+router.get("/getColleaguesApplications", getColleaguesApplications);
 router.put(
   "/editApplication/:eventId/:exerciseId/:applicationId",
   editApplication

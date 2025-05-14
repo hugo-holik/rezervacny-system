@@ -6,6 +6,7 @@ const User = require("../models/user");
 const { validate, validated } = require("../util/validation");
 const { sendApplicationSchema } = require("../schemas/event.schema");
 const { buildApplicationsData } = require("../services/applicationsHelper");
+const externalSchool = require("../models/externalSchool");
 
 exports.get = async (req, res) => {
   try {
@@ -350,6 +351,25 @@ exports.getAllApplications = async (req, res) => {
     const events = await Event.find();
     const exercises = await Exercise.find();
     const applications = await buildApplicationsData(events, exercises);
+
+    res.send(applications);
+
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+// Get applications of current user's colleagues
+exports.getColleaguesApplications = async (req, res) => {
+  try {
+    const events = await Event.find();
+    const exercises = await Exercise.find();
+    const colleagues = await User.find(
+      { externalSchool: req.user.externalSchool });
+    const colleagueIds = colleagues.map(colleague => colleague._id);
+    const applications = await buildApplicationsData(events, exercises, {
+      teacherId: req.user.user_id
+    });
 
     res.send(applications);
     

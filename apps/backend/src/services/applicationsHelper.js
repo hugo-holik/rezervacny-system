@@ -9,6 +9,11 @@ exports.buildApplicationsData = async (events, exercises, filters = {}) => {
         if (filters.teacherId && attendee.teacher.toString() !== filters.teacherId.toString()) {
           continue;
         }
+        if (filters.colleagueIds) {
+          if (!filters.colleagueIds.some(id => id.toString() === attendee.teacher.toString())) {
+            continue;
+          }
+        }
 
         const eventData = {
           date: openExercise.date,
