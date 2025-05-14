@@ -19,6 +19,8 @@ services:
             - ./apps/backend/:/usr/src/app
             - /usr/src/app/.pnpm-store
             - /usr/src/app/node_modules
+        ports:
+            - "9229:9229" # Debug port
         command: pnpm run dev
         environment:
             MONGO_DATABASE_URL2: mongodb://mongo:27017/api
