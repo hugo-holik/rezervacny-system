@@ -328,7 +328,7 @@ exports.sendApplication = [
   }
 ];
 
-//get curent user's applications
+// Get curent user's applications
 exports.getApplications = async (req, res) => {
   try {
     const events = await Event.find();
@@ -339,6 +339,20 @@ exports.getApplications = async (req, res) => {
 
     res.send(applications);
 
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+// Get all applications
+exports.getAllApplications = async (req, res) => {
+  try {
+    const events = await Event.find();
+    const exercises = await Exercise.find();
+    const applications = await buildApplicationsData(events, exercises);
+
+    res.send(applications);
+    
   } catch (error) {
     res.status(500).send(error.message);
   }

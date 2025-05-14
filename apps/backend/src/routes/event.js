@@ -10,6 +10,7 @@ const {
   removeExercise,
   sendApplication,
   getApplications,
+  getAllApplications,
   editApplication,
   deleteApplication,
   updateAttendeeStatus,
@@ -21,6 +22,7 @@ const router = express.Router();
 // applications (prihlasovanie na otvorene cvicenia)
 router.post("/sendApplication/:eventId/:exerciseId", sendApplication);
 router.get("/getApplications", getApplications);
+router.get("/getAllApplications", getAllApplications);
 router.put(
   "/editApplication/:eventId/:exerciseId/:applicationId",
   editApplication
@@ -44,6 +46,8 @@ router.put("/editExercise/:eventId/:exerciseId", editExercise);
 router.delete("/removeExercise/:eventId/:exerciseId", removeExercise);
 
 // Aktualizácia stavu účastníka v cvičení
-router.put("/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", updateAttendeeStatus);
+router.put(
+  "/updateAttendeeStatus/:eventId/:exerciseId/:attendeeId", 
+  updateAttendeeStatus);
 
 module.exports = router;
