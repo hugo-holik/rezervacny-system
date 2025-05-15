@@ -239,10 +239,19 @@ export const api = createApi({
       }),
       providesTags: ['Events']
     }),
+    getAllApplications: builder.query({
+      query: (data) => ({
+        url: '/event/getAllApplications',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
     getColleaguesApplications: builder.query({
-      query: () => ({
+      query: (data) => ({
         url: '/event/getColleaguesApplications',
-        method: 'GET'
+        method: 'GET',
+        body: data
       }),
       providesTags: ['Events']
     }),
