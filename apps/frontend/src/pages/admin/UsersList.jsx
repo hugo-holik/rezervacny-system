@@ -33,17 +33,21 @@ ExternalSchoolCell.propTypes = {
 };
 
 const UsersList = () => {
-  const { data, isLoading } = useGetUsersListQuery();
+  const { data: users = [], isLoading, refetch } = useGetUsersListQuery();
   const [removeUser] = useRemoveUserMutation();
 
   const onRemoveHandler = async (id) => {
     const response = await removeUser(id);
     if (!response.error) {
       toast.success('Uzivatel bol uspesne odstraneny');
+      refetch();
     } else {
-      toast.error('Chyba pri odstranovani pouzivatela: ' + response.error?.data?.message);
+      const errorMsg = response.error?.data?.message || 'Neznáma chyba';
+      toast.error('Chyba pri odstraňovaní používateľa: ' + errorMsg);
     }
   };
+
+  console.log("users", users);
 
   const columns = [
     { field: 'name', headerName: 'Meno', flex: 1, minWidth: 150 },
@@ -110,7 +114,7 @@ const UsersList = () => {
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading}
-          rows={data}
+          rows={users}
           columns={columns}
           getRowId={(row) => row._id}
           pageSizeOptions={[10, 20, 50]}
