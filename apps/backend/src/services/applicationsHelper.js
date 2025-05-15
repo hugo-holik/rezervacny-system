@@ -14,6 +14,10 @@ exports.buildApplicationsData = async (events, exercises, filters = {}) => {
             continue;
           }
         }
+        const exerciseDate = new Date(openExercise.date);
+        if (filters.filterFromDate && exerciseDate > new Date(filters.filterFromDate)) {
+          continue;
+        }
 
         const eventData = {
           date: openExercise.date,

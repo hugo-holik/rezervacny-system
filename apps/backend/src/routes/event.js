@@ -12,6 +12,7 @@ const {
   getApplications,
   getAllApplications,
   getColleaguesApplications,
+  getApplicationsHistory,
   editApplication,
   deleteApplication,
   updateAttendeeStatus,
@@ -25,6 +26,7 @@ router.post("/sendApplication/:eventId/:exerciseId", sendApplication);
 router.get("/getApplications", getApplications);
 router.get("/getAllApplications", getAllApplications);
 router.get("/getColleaguesApplications", getColleaguesApplications);
+router.get("/getApplicationsHistory", getApplicationsHistory);
 router.put(
   "/editApplication/:eventId/:exerciseId/:applicationId",
   editApplication

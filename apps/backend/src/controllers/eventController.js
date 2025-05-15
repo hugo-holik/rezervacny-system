@@ -378,6 +378,23 @@ exports.getColleaguesApplications = async (req, res) => {
   }
 };
 
+// Get applications history of current user's old applications
+exports.getApplicationsHistory = async (req, res) => {
+  try {
+    const events = await Event.find();
+    const exercises = await Exercise.find();
+    const dateNow = new Date();
+    const applications = await buildApplicationsData(events, exercises, {
+      filterStartDate: dateNow
+    });
+
+    res.send(applications);
+    
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 exports.editApplication = async (req, res) => {
   const { eventId, exerciseId, applicationId } = req.params;
 

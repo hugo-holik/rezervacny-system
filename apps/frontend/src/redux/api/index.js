@@ -255,6 +255,14 @@ export const api = createApi({
       }),
       providesTags: ['Events']
     }),
+    getApplicationsHistory: builder.query({
+      query: (data) => ({
+        url: '/event/getApplicationsHistory',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
     editApplication: builder.mutation({
       query: ({ eventId, exerciseId, applicationId, ...data }) => ({
         url: `/event/editApplication/${eventId}/${exerciseId}/${applicationId}`,
@@ -310,6 +318,9 @@ export const {
   useChangeUserPasswordMutation,
   useSendApplicationMutation,
   useGetApplicationsQuery,
+  useGetAllApplicationsQuery,
+  useGetColleaguesApplicationsQuery,
+  useGetApplicationsHistoryQuery,
   useDeleteApplicationMutation,
   useEditApplicationMutation,
   useTogglePublishedMutation
