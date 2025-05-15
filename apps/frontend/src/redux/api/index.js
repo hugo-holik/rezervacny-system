@@ -239,6 +239,22 @@ export const api = createApi({
       }),
       providesTags: ['Events']
     }),
+    getAllApplications: builder.query({
+      query: (data) => ({
+        url: '/event/getAllApplications',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
+    getColleaguesApplications: builder.query({
+      query: (data) => ({
+        url: '/event/getColleaguesApplications',
+        method: 'GET',
+        body: data
+      }),
+      providesTags: ['Events']
+    }),
     editApplication: builder.mutation({
       query: ({ eventId, exerciseId, applicationId, ...data }) => ({
         url: `/event/editApplication/${eventId}/${exerciseId}/${applicationId}`,
