@@ -57,7 +57,7 @@ exports.create = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const records = await Exercise.find();
+    const records = await Exercise.find().populate('leads', 'name surname');
     res.status(200).send(records);
   } catch (err) {
     throwError(err.message, 500);

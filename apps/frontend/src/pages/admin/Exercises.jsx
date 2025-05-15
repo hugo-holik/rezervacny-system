@@ -22,7 +22,6 @@ const Exercises = () => {
     isLoading,
     refetch // <- this will be used to reload data after update
   } = useGetAllExercisesQuery();
-  const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
   const { data: currentUser = [] } = useGetUserMeQuery();
   const [deleteExercise] = useDeleteExerciseMutation();
   const [openAddModal, setOpenAddModal] = useState(false);
@@ -54,11 +53,6 @@ const Exercises = () => {
     setOpenEditModal(true);
   };
 
-  const userMap = users.reduce((acc, user) => {
-    acc[user._id] = user.name;
-    return acc;
-  }, {});
-
   const formatDate = (dateString) => {
     if (!dateString) return '-'; // Handle undefined dateString
 
@@ -76,9 +70,9 @@ const Exercises = () => {
       field: 'startTimes',
       headerName: 'Začiatok',
       flex: 1,
-      valueFormatter: (params) => {
-        if (params && Array.isArray(params)) {
-          return params.map((time) => formatDate(time)).join(', ');
+      valueFormatter: ({ value }) => {
+        if (Array.isArray(value)) {
+          return value.map((time) => formatDate(time)).join(', ');
         }
         return '-';
       }
@@ -90,9 +84,11 @@ const Exercises = () => {
       headerName: 'Vyučujúci',
       flex: 1,
       renderCell: (params) => {
-        const leadIds = params.row?.leads;
-        if (Array.isArray(leadIds) && leadIds.length > 0) {
-          return leadIds.map((id) => userMap[id] ?? `Neznámy (${id.slice(0, 6)})`).join(', ');
+        const leads = params.row?.leads;
+        if (Array.isArray(leads) && leads.length > 0) {
+          return leads
+            .map((lead) => `${lead.name} ${lead.surname}`)
+            .join(', ');
         }
         return '-';
       }
@@ -156,7 +152,7 @@ const Exercises = () => {
       </Grid>
       <Paper sx={{ mt: 2 }}>
         <DataGrid
-          loading={isLoading || usersLoading}
+          loading={isLoading}
           rows={filterExercises || []}
           columns={columns}
           getRowId={(row) => row._id}
@@ -194,7 +190,6 @@ const Exercises = () => {
             }
           }}
           exerciseData={selectedExercise}
-          users={users}
         />
       )}
     </Box>

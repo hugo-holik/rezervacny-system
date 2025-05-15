@@ -140,6 +140,7 @@ const MainLayout = ({ children }) => {
       { title: 'Domov', type: 'header' },
       { title: 'Špeciálne udalosti', navTo: '/admin/events', icon: <EventIcon /> },
       { title: 'Kalendár', navTo: '/admin/calendar', icon: <CalendarMonthIcon /> },
+      { title: 'Moje Prihlášky', navTo: '/admin/applications', icon: <ChecklistIcon /> },
       { title: 'História', navTo: '/admin/history', icon: <HistoryIcon /> },
       { title: 'Info', navTo: '/admin/info', icon: <HelpIcon /> }
     );

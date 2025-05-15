@@ -2,7 +2,10 @@ import ConfirmationDialog from '@app/components/ConfirmationDialog';
 import {
   useDeleteApplicationMutation,
   useEditApplicationMutation,
-  useGetApplicationsQuery
+  useGetAllEventsQuery,
+  useGetApplicationsQuery,
+  useGetColleaguesApplicationsQuery,
+  useGetUserMeQuery
 } from '@app/redux/api';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -30,15 +33,78 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Applications = () => {
-  // const { data: currentUser } = useGetUserMeQuery();
+  const { data: currentUser, isLoading: isUserLoading, isError: isUserError } = useGetUserMeQuery();
+  const { data: events, isLoading: isEventsLoading, isError: isEventsError , refetch } = useGetAllEventsQuery();
 
-  const { data: applications, isLoading, isError } = useGetApplicationsQuery();
+
+  const { data: applications = [], isLoading: isApplicationsLoading, isError:isApplicationsError } = useGetApplicationsQuery();
+  const { data: colleagueApplications, isLoading: isColleaguesLoading, error: colleaguesError } = useGetColleaguesApplicationsQuery();
+  console.log("colleagueApplications", colleagueApplications);
   const [deleteApplication] = useDeleteApplicationMutation();
   const [editApplication] = useEditApplicationMutation();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [numOfAttendees, setNumOfAttendees] = useState(1);
+
+  if (isUserLoading || isEventsLoading || isApplicationsLoading ) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+    if (isUserError || isEventsError || isApplicationsError ) {
+    return (
+      <Typography color="error" variant="h6" align="center" mt={4}>
+        Chyba pri načítaní dát
+      </Typography>
+    );
+  }
+  const isLoading = isUserLoading || isEventsLoading || isApplicationsLoading;
+
+const applicationsFromEvents = events?.flatMap(event =>
+  event.openExercises?.flatMap(exercise =>
+    exercise.attendees
+      ?.filter(attendee => {
+        if (currentUser?.role === 'Správca cvičení') {
+          return true; // vidí všetkých
+        }
+        // inak len ak sa zhoduje teacher s currentUser._id
+        // Pozor, teacher je objekt { $oid: "xxx" }, treba to rozbaliť
+        const teacherId = attendee.teacher?.$oid || attendee.teacher;
+        return teacherId === currentUser?._id;
+      })
+      ?.map(attendee => ({
+        id: attendee._id?.$oid || attendee._id,
+        eventName: event.name,
+        date: exercise.date,
+        startTime: exercise.startTime,
+        numOfAttendees: attendee.numOfAttendees,
+        approvalState: attendee.approvalStatus,
+        createdAt: attendee.createdAt ?? null,
+        approvedAt: attendee.approvedAt ?? null,
+        exerciseId: exercise._id?.$oid || exercise._id,
+        eventId: event._id?.$oid || event._id,
+        applicationId: attendee._id?.$oid || attendee._id,
+      })) ?? []
+  ) ?? []
+) ?? [];
+
+//filtrovanie iba kolegov
+const myApplicationIds = applicationsFromEvents.map(app => app.applicationId);
+const filteredColleagueApplications = colleagueApplications?.filter(
+  app => !myApplicationIds.includes(app.applicationId)
+) || [];
+
+
+//console.log(applications);
+
+/*
+  console.log("event", events);
+  console.log("application", applications);
+  console.log("applicationsFromEvents",applicationsFromEvents);
+  */
 
   const openEditDialog = (application) => {
     setSelectedApplication(application);
@@ -60,30 +126,38 @@ const Applications = () => {
         numOfAttendees: Number(numOfAttendees)
       }).unwrap();
       toast.success('Application updated successfully');
+      refetch();
       closeEditDialog();
     } catch (error) {
       toast.error('Error updating application', error);
     }
   };
 
-  const handleApproveApplication = async (row) => {
-    if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
-      toast.error('Missing required IDs for approval');
-      return;
-    }
-    try {
-      await editApplication({
-        eventId: row.eventId,
-        exerciseId: row.exerciseId,
-        applicationId: row.applicationId,
-        approvalState: 'schválené',
-        approvedAt: new Date().toISOString()
-      }).unwrap();
-      toast.success('Application approved successfully');
-    } catch (error) {
-      toast.error('Error approving application', error);
-    }
-  };
+  const handleApproveApplication = async ({ eventId, exerciseId, applicationId }) => {
+  try {
+    console.log("Approving application with data:", { eventId, exerciseId, applicationId });
+
+    // Posielame PUT request s approvalState a approvedAt dátami
+    const result = await editApplication({
+      eventId,
+      exerciseId,
+      applicationId,
+      approvalState: 'schválené',
+      approvedAt: new Date().toISOString(),
+    }).unwrap();
+
+    console.log("Prihláška bola úspešne potvrdená", result);
+    refetch();
+
+  } catch (error) {
+    // Ošetrenie prípadov, keď error.data je null
+    const errorMessage = error?.data?.message ?? error?.message ?? 'Unknown error';
+    console.error("Error pri potvrdzovaní prihlášky:", errorMessage);
+    alert(`Error pri potvrdzovaní prihlášky: ${errorMessage}`);
+  }
+};
+
+
 
   const handleRejectApplication = async (row) => {
     if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
@@ -98,159 +172,11 @@ const Applications = () => {
         approvalState: 'zamietnuté'
       }).unwrap();
       toast.success('Application rejected successfully');
+      refetch();
     } catch (error) {
       toast.error('Error rejecting application', error);
     }
   };
-
-  const getStatusColor = (status) => {
-    if (!status) return 'default';
-    switch (status.toLowerCase()) {
-      case 'čaká na schválenie':
-        return 'warning';
-      case 'schválené':
-        return 'success';
-      case 'zamietnuté':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  const formatDate = (dateString, formatString) => {
-    try {
-      return dateString ? format(new Date(dateString), formatString) : 'N/A';
-    } catch {
-      return 'Invalid Date';
-    }
-  };
-
-  const columns = [
-    {
-      field: 'exerciseName',
-      headerName: 'Názov cvičenia',
-      width: 100
-    },
-    {
-      field: 'date',
-      headerName: 'Dátum',
-      width: 100,
-      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy')
-    },
-    {
-      field: 'startTime',
-      headerName: 'Začiatok',
-      width: 80,
-      valueFormatter: (params) => formatDate(params, 'HH:mm')
-    },
-    {
-      field: 'numOfAttendees',
-      headerName: 'Počet účastníkov',
-      flex: 1,
-      type: 'number'
-    },
-    {
-      field: 'maxAttendees',
-      headerName: 'Max. počet účastníkov',
-      flex: 1,
-      type: 'number'
-    },
-    {
-      field: 'approvalState',
-      headerName: 'Status',
-      flex: 1,
-      renderCell: (params) => (
-        <Chip
-          label={params.value || 'Neznámy'}
-          color={getStatusColor(params.value)}
-          variant="outlined"
-        />
-      )
-    },
-    {
-      field: 'createdAt',
-      headerName: 'Podané o',
-      flex: 1,
-      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
-    },
-    {
-      field: 'approvedAt',
-      headerName: 'Potvrdené o',
-      flex: 1,
-      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
-    },
-    {
-      field: 'approvalActions', // New column for approve/reject actions
-      headerName: 'Schváliť/Odmietnuť',
-      width: 100,
-      renderCell: (params) => {
-        const isPending =
-          params.row.approvalState === 'čaká na schválenie' || !params.row.approvalState;
-
-        if (isPending) {
-          return (
-            <>
-              <ConfirmationDialog
-                key="approve"
-                title={`Potvrdiť prihlášku pre ${params?.row?.exerciseName || 'toto cvičenie'}?`}
-                onAccept={() => handleApproveApplication(params.row)}
-              >
-                <Tooltip title="Potvrdiť prihlášku">
-                  <IconButton color="default">
-                    <CheckCircleIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </ConfirmationDialog>
-
-              <ConfirmationDialog
-                key="reject"
-                title={`Odmietnuť prihlášku pre ${params?.row?.exerciseName || 'toto cvičenie'}?`}
-                onAccept={() => handleRejectApplication(params.row)}
-              >
-                <Tooltip title="Odmietnuť prihlášku">
-                  <IconButton color="default">
-                    <CancelIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </ConfirmationDialog>
-            </>
-          );
-        }
-        return null; // Nothing if not pending
-      }
-    },
-    {
-      field: 'actions',
-      headerName: 'Akcie',
-      type: 'actions',
-      width: 180,
-      getActions: (params) => {
-        // const isPrivileged = ['Správca cvičení'].includes(currentUser.role) || currentUser.isAdmin;
-
-        // Actions only for non-pending statuses (edit/delete)
-        const actions = [
-          <Tooltip key="edit" title="Upraviť prihlášku">
-            <IconButton color="default" onClick={() => openEditDialog(params.row)}>
-              <EditIcon />
-            </IconButton>
-          </Tooltip>,
-          <ConfirmationDialog
-            key="delete"
-            title={`Delete application for ${params?.row?.exerciseName || 'this exercise'}?`}
-            onAccept={() => handleDeleteApplication(params.row)}
-          >
-            <Tooltip title="Odstrániť prihlášku">
-              <IconButton color="default">
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </ConfirmationDialog>
-        ];
-
-        return actions; // Only show edit/delete actions if it's not pending
-      }
-    }
-  ];
 
   const handleDeleteApplication = async (row) => {
     if (!row?.applicationId || !row?.exerciseId || !row?.eventId) {
@@ -264,81 +190,180 @@ const Applications = () => {
         applicationId: row.applicationId
       }).unwrap();
       toast.success('Application deleted successfully');
+      refetch();
     } catch (error) {
       toast.error('Error deleting application', error);
     }
   };
 
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
+  const getStatusColor = (status) => {
+    if (!status) return 'default';
+    switch (status.toLowerCase()) {
+      case 'čaká na schválenie': return 'warning';
+      case 'schválené': return 'success';
+      case 'zamietnuté': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const formatDate = (dateString, formatString) => {
+    try {
+      return dateString ? format(new Date(dateString), formatString) : 'N/A';
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+  
+
+  let columns = [
+    { field: 'eventName', headerName: 'Názov cvičenia', width: 100 },
+    {
+      field: 'date',
+      headerName: 'Dátum',
+      width: 100,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy')
+    },
+    {
+      field: 'startTime',
+      headerName: 'Začiatok',
+      width: 80,
+      valueFormatter: (params) => formatDate(params, 'HH:mm')
+    },
+    { field: 'numOfAttendees', headerName: 'Počet účastníkov', flex: 1, type: 'number' },
+    {
+      field: 'approvalState',
+      headerName: 'Status',
+      flex: 1,
+      renderCell: (params) => (
+        <Chip label={params.value || 'Neznámy'} color={getStatusColor(params.value)} variant="outlined" />
+      )
+    },
+    {
+      field: 'createdAt',
+      headerName: 'Podané o',
+      flex: 1,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
+    },
+    {
+      field: 'approvedAt',
+      headerName: 'Potvrdené o',
+      flex: 1,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
+    }
+  ];
+
+  if (currentUser?.role !== 'Externý učiteľ') {
+    columns.push({
+      field: 'approvalActions',
+      headerName: 'Schváliť/Odmietnuť',
+      width: 100,
+      renderCell: (params) => {
+        const isPending = params.row.approvalState === 'čaká na schválenie' || !params.row.approvalState;
+        return isPending ? (
+          <Box display="flex" gap={1}>
+            <ConfirmationDialog
+              key="approve"
+              title={`Potvrdiť prihlášku pre ${params.row.exerciseName}?`}
+              onAccept={() => handleApproveApplication(params.row)}
+            >
+              <Tooltip title="Potvrdiť prihlášku">
+                <IconButton><CheckCircleIcon fontSize="small" /></IconButton>
+              </Tooltip>
+            </ConfirmationDialog>
+
+            <ConfirmationDialog
+              key="reject"
+              title={`Odmietnuť prihlášku pre ${params.row.exerciseName}?`}
+              onAccept={() => handleRejectApplication(params.row)}
+            >
+              <Tooltip title="Odmietnuť prihlášku">
+                <IconButton><CancelIcon fontSize="small" /></IconButton>
+              </Tooltip>
+            </ConfirmationDialog>
+          </Box>
+        ) : null;
+      }
+    });
   }
 
-  if (isError) {
-    return (
-      <Typography color="error" variant="h6" align="center" mt={4}>
-        Error loading applications
-      </Typography>
-    );
+  if (currentUser?.role !== 'Externý učiteľ') {
+    columns.push({
+      field: 'actions',
+      headerName: 'Akcie',
+      type: 'actions',
+      width: 180,
+      getActions: (params) => [
+        <Tooltip key="edit" title="Upraviť prihlášku">
+          <IconButton onClick={() => openEditDialog(params.row)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>,
+        <ConfirmationDialog
+          key="delete"
+          title={`Odstrániť prihlášku pre ${params.row.exerciseName}?`}
+          onAccept={() => handleDeleteApplication(params.row)}
+        >
+          <Tooltip title="Odstrániť prihlášku">
+            <IconButton><DeleteIcon fontSize="small" /></IconButton>
+          </Tooltip>
+        </ConfirmationDialog>
+      ]
+    });
   }
 
   return (
     <Box py={2}>
-      <Grid py={1} px={1} container spacing={1}>
-        <Grid item xs={12} sm={9} display={'flex'}>
-          <Typography variant="h4" alignSelf={'center'}>
-            Prihlášky
-          </Typography>
-        </Grid>
-      </Grid>
+      <Typography variant="h4" px={2} py={1}>Prihlášky</Typography>
 
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading}
-          rows={applications || []}
+          rows={applicationsFromEvents || []}
           columns={columns}
-          getRowId={(row) => row?.applicationId}
+          getRowId={(row) => row.applicationId ?? `${row.eventId}-${row.exerciseId}-${row.attendeeId}`}
           pageSizeOptions={[10, 20, 50]}
           initialState={{
             density: 'standard',
-            pagination: {
-              paginationModel: {
-                pageSize: 20
-              }
-            }
+            pagination: { paginationModel: { pageSize: 20 } }
           }}
           isRowSelectable={() => false}
-          slots={{
-            toolbar: GridToolbar
-          }}
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true
-            }
-          }}
-          ignoreDiacritics
-          sx={{
-            '& .MuiDataGrid-row': {
-              minHeight: '52px !important',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
-            },
-            '& .MuiDataGrid-cell': {
-              py: 2,
-              display: 'flex',
-              alignItems: 'center'
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              minHeight: '56px !important'
-            }
-          }}
+          slots={{ toolbar: GridToolbar }}
+          slotProps={{ toolbar: { showQuickFilter: true } }}
         />
       </Paper>
 
+      {currentUser?.role === 'Externý učiteľ' && (
+        <Box mt={6}>
+          <Typography variant="h5" gutterBottom>
+            Prihlášky kolegov z mojej školy
+          </Typography>
+          {isColleaguesLoading ? (
+            <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>
+          ) : colleaguesError ? (
+            <Typography color="error" variant="h6" align="center" mt={4}>
+              Chyba pri načítaní kolegových prihlášok
+            </Typography>
+          ) : (filteredColleagueApplications?.length === 0 ? (
+            <Typography variant="h6" align="center" mt={4}>
+              Žiadne prihlášky od kolegov z vašej školy.
+            </Typography>
+          ) : (
+            <Paper>
+              <DataGrid
+                rows={filteredColleagueApplications}
+                columns={columns}
+                getRowId={(row) => `${row.applicationId}-colleague`}
+                pageSizeOptions={[10, 20, 50]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 10 } }
+                }}
+                slots={{ toolbar: GridToolbar }}
+                slotProps={{ toolbar: { showQuickFilter: true } }}
+              />
+            </Paper>
+          ))}
+        </Box>
+      )}
       <Dialog open={editDialogOpen} onClose={closeEditDialog}>
         <DialogTitle>Upraviť počet účastníkov</DialogTitle>
         <DialogContent>
@@ -354,11 +379,7 @@ const Applications = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeEditDialog}>Zrušiť</Button>
-          <Button
-            onClick={handleEditSave}
-            variant="contained"
-            disabled={!numOfAttendees || numOfAttendees < 1}
-          >
+          <Button onClick={handleEditSave} variant="contained" disabled={!numOfAttendees || numOfAttendees < 1}>
             Uložiť
           </Button>
         </DialogActions>
