@@ -368,7 +368,7 @@ exports.getColleaguesApplications = async (req, res) => {
       { externalSchool: req.user.externalSchool });
     const colleagueIds = colleagues.map(colleague => colleague._id);
     const applications = await buildApplicationsData(events, exercises, {
-      teacherId: req.user.user_id
+      colleagueIds: colleagueIds
     });
 
     res.send(applications);
