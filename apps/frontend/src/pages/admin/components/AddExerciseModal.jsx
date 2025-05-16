@@ -28,8 +28,15 @@ import { SketchPicker } from 'react-color';
 const AddExerciseModal = ({ open, onClose }) => {
   const theme = useTheme();
   const [createExercise] = useCreateExerciseMutation();
-  const { data: users, isLoading: usersLoading } = useGetUsersListQuery();
-  const { data: userMe, isLoading: isUserMeLoading, refetch: refetchUserMe } = useGetUserMeQuery();
+
+  const { data: currentUser, isLoading: isCurrentUserLoading, refetch: refetchcurrentUser } = useGetUserMeQuery();
+  const shouldFetchUsers = currentUser?.role === 'Správca cvičení' || currentUser?.isAdmin;
+  const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery(undefined, {
+    skip: !shouldFetchUsers,
+  });
+  // TODO: novy GET podla role 
+  const unizaUsers = users.filter(user => user.role === 'Zamestnanec UNIZA');
+
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -116,7 +123,6 @@ const AddExerciseModal = ({ open, onClose }) => {
 
     setStartTimes(prev => [...prev, timeString]);
     setNewStartTime(null);
-    setDuration('');
     setValidationErrors({});
   };
 
@@ -138,7 +144,6 @@ const AddExerciseModal = ({ open, onClose }) => {
       leads,
       startTimes
     };
-    console.log("Sending data to backend:", exerciseData);
     try {
       await createExercise(exerciseData).unwrap();
       onClose();
@@ -148,17 +153,17 @@ const AddExerciseModal = ({ open, onClose }) => {
   };
 
   useEffect(() => {
-    if (!isUserMeLoading) {
-      if (userMe?.role === 'Zamestnanec UNIZA') {
-        if (userMe._id) {
-          setLeads([userMe._id]);
+    if (!isCurrentUserLoading) {
+      if (currentUser?.role === 'Zamestnanec UNIZA') {
+        if (currentUser._id) {
+          setLeads([currentUser._id]);
         } else {
           console.warn('Missing _id for user, refetching...');
-          refetchUserMe();
+          refetchcurrentUser();
         }
       }
     }
-  }, [isUserMeLoading, userMe, refetchUserMe]);
+  }, [isCurrentUserLoading, currentUser, refetchcurrentUser]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -226,11 +231,11 @@ const AddExerciseModal = ({ open, onClose }) => {
               />
             </Stack>
 
-            {!isUserMeLoading && userMe?.role === 'Zamestnanec UNIZA' ? (
+            {!isCurrentUserLoading && currentUser?.role === 'Zamestnanec UNIZA' ? (
               <TextField
                 label="Vyučujúci"
                 fullWidth
-                value={userMe.name}
+                value={currentUser.name}
                 disabled
                 helperText="Ako zamestnanec UNIZA ste automaticky nastavený ako vyučujúci."
               />
@@ -244,8 +249,8 @@ const AddExerciseModal = ({ open, onClose }) => {
                   label="Vyučujúci"
                   disabled={usersLoading}
                 >
-                  {!usersLoading && users && users.length > 0 ? (
-                    users.map((user) => (
+                  {!usersLoading && unizaUsers.length > 0 ? (
+                    unizaUsers.map((user) => (
                       <MenuItem key={user._id} value={user._id}>
                         {user.name}
                       </MenuItem>

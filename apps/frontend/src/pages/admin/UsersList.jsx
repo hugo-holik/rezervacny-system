@@ -34,11 +34,9 @@ ExternalSchoolCell.propTypes = {
 };
 
 const UsersList = () => {
-  const { data: currentUser, isLoading: isCurrentUserLoading } = useGetUserMeQuery();
-
+const { data: currentUser, isLoading: isCurrentUserLoading } = useGetUserMeQuery();
 const shouldFetchUsers =
   currentUser?.role === 'Správca cvičení' || currentUser?.isAdmin;
-
 const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery(undefined, {
   skip: !shouldFetchUsers,
 });
