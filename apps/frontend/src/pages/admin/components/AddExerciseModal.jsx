@@ -1,4 +1,4 @@
-import { useCreateExerciseMutation, useGetUsersListQuery } from '@app/redux/api';
+import { useCreateExerciseMutation, useGetUserMeQuery, useGetUsersListQuery } from '@app/redux/api';
 import { Delete } from '@mui/icons-material';
 import {
   Box,
@@ -17,18 +17,19 @@ import {
   Typography,
   useTheme
 } from '@mui/material';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SketchPicker } from 'react-color';
 
 const AddExerciseModal = ({ open, onClose }) => {
   const theme = useTheme();
   const [createExercise] = useCreateExerciseMutation();
   const { data: users, isLoading: usersLoading } = useGetUsersListQuery();
+  const { data: userMe, isLoading: isUserMeLoading, refetch: refetchUserMe } = useGetUserMeQuery();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -38,7 +39,10 @@ const AddExerciseModal = ({ open, onClose }) => {
   const [maxAttendees, setMaxAttendees] = useState('');
   const [color, setColor] = useState('#000000');
   const [leads, setLeads] = useState([]);
+
+  // Tu newStartTime je dayjs objekt alebo null
   const [newStartTime, setNewStartTime] = useState(null);
+  // startTimes je pole stringov "HH:mm"
   const [startTimes, setStartTimes] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -48,7 +52,11 @@ const AddExerciseModal = ({ open, onClose }) => {
     if (!program) errors.program = 'Program je povinný';
     if (!description) errors.description = 'Popis je povinný';
     if (!room) errors.room = 'Miestnosť je povinná';
-    if (!duration) errors.duration = 'Dĺžka je povinná';
+    if (!duration) {
+      errors.duration = 'Dĺžka je povinná';
+    } else if (!Number.isInteger(Number(duration)) || Number(duration) <= 0) {
+      errors.duration = 'Dĺžka musí byť celé kladné číslo v hodinách';
+    }
     if (!maxAttendees) errors.maxAttendees = 'Maximálny počet je povinný';
     if (startTimes.length === 0) errors.startTime = 'Aspoň jeden začiatok je povinný';
     if (leads.length === 0) errors.leads = 'Vyberte aspoň jedného vedúceho';
@@ -57,11 +65,59 @@ const AddExerciseModal = ({ open, onClose }) => {
     return Object.keys(errors).length === 0;
   };
 
+  const isWithinWorkingHoursWithDuration = (startTime, durationInHours) => {
+    if (!startTime || !durationInHours) return false;
+
+    const durationNum = Number(durationInHours);
+    if (isNaN(durationNum) || durationNum <= 0) return false;
+
+    const startHour = startTime.hour();
+    const startMinutes = startTime.minute();
+
+    const startTotalMinutes = startHour * 60 + startMinutes;
+    const durationInMinutes = durationNum * 60;
+    const endTotalMinutes = startTotalMinutes + durationInMinutes;
+
+    const WORK_START = 7 * 60;         // 07:00
+    const WORK_START_LIMIT = 19 * 60;  // 19:00
+    const WORK_END = 20 * 60;          // 20:00
+
+    if (startTotalMinutes < WORK_START || startTotalMinutes > WORK_START_LIMIT) return false;
+    if (endTotalMinutes > WORK_END) return false;
+
+    return true;
+  };
+
   const handleAddStartTime = () => {
-    if (newStartTime) {
-      setStartTimes([...startTimes, newStartTime.toDate()]);
-      setNewStartTime(null);
+    setValidationErrors({});
+
+    if (!newStartTime || !duration) {
+      setValidationErrors({
+        startTime: 'Zadajte čas a dĺžku cvičenia'
+      });
+      return;
     }
+
+    if (!isWithinWorkingHoursWithDuration(newStartTime, duration)) {
+      setValidationErrors({
+        startTime: 'Cvičenie musí začať medzi 07:00 a 19:00 a skončiť najneskôr o 20:00'
+      });
+      return;
+    }
+
+    const timeString = newStartTime.format('HH:mm');
+
+    if (startTimes.includes(timeString)) {
+      setValidationErrors({
+        startTime: 'Tento čas už bol pridaný'
+      });
+      return;
+    }
+
+    setStartTimes(prev => [...prev, timeString]);
+    setNewStartTime(null);
+    setDuration('');
+    setValidationErrors({});
   };
 
   const handleRemoveStartTime = (indexToRemove) => {
@@ -80,9 +136,9 @@ const AddExerciseModal = ({ open, onClose }) => {
       maxAttendees: parseInt(maxAttendees),
       color,
       leads,
-      startTimes: startTimes.map((time) => time.toISOString())
+      startTimes
     };
-
+    console.log("Sending data to backend:", exerciseData);
     try {
       await createExercise(exerciseData).unwrap();
       onClose();
@@ -90,6 +146,19 @@ const AddExerciseModal = ({ open, onClose }) => {
       console.error('Error adding exercise:', error);
     }
   };
+
+  useEffect(() => {
+    if (!isUserMeLoading) {
+      if (userMe?.role === 'Zamestnanec UNIZA') {
+        if (userMe._id) {
+          setLeads([userMe._id]);
+        } else {
+          console.warn('Missing _id for user, refetching...');
+          refetchUserMe();
+        }
+      }
+    }
+  }, [isUserMeLoading, userMe, refetchUserMe]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -137,9 +206,10 @@ const AddExerciseModal = ({ open, onClose }) => {
                 helperText={validationErrors.room}
               />
               <TextField
-                label="Dĺžka (min)"
+                label="Dĺžka (hodiny)"
                 fullWidth
                 type="number"
+                inputProps={{ step: 1, min: 1 }}
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 error={!!validationErrors.duration}
@@ -156,43 +226,62 @@ const AddExerciseModal = ({ open, onClose }) => {
               />
             </Stack>
 
-            <FormControl fullWidth error={!!validationErrors.leads}>
-              <InputLabel>Vyučujúci</InputLabel>
-              <Select
-                multiple
-                value={leads}
-                onChange={(e) => setLeads(e.target.value)}
+            {!isUserMeLoading && userMe?.role === 'Zamestnanec UNIZA' ? (
+              <TextField
                 label="Vyučujúci"
-                disabled={usersLoading}
-              >
-                {!usersLoading && users && users.length > 0 ? (
-                  users.map((user) => (
-                    <MenuItem key={user._id} value={user._id}>
-                      {user.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No users available</MenuItem>
+                fullWidth
+                value={userMe.name}
+                disabled
+                helperText="Ako zamestnanec UNIZA ste automaticky nastavený ako vyučujúci."
+              />
+            ) : (
+              <FormControl fullWidth error={!!validationErrors.leads}>
+                <InputLabel>Vyučujúci</InputLabel>
+                <Select
+                  multiple
+                  value={leads}
+                  onChange={(e) => setLeads(e.target.value)}
+                  label="Vyučujúci"
+                  disabled={usersLoading}
+                >
+                  {!usersLoading && users && users.length > 0 ? (
+                    users.map((user) => (
+                      <MenuItem key={user._id} value={user._id}>
+                        {user.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>Žiadni vyučujúci nie sú dostupní</MenuItem>
+                  )}
+                </Select>
+                {validationErrors.leads && (
+                  <Typography color="error" variant="caption">
+                    {validationErrors.leads}
+                  </Typography>
                 )}
-              </Select>
-              {validationErrors.leads && (
-                <Typography color="error" variant="caption">
-                  {validationErrors.leads}
-                </Typography>
-              )}
-            </FormControl>
+              </FormControl>
+            )}
 
             <Stack direction="row" spacing={4} alignItems="flex-start">
-              {/* Start Times Section */}
               <Box flex={1}>
                 <Typography variant="subtitle1" fontWeight={500}>
                   Časy začiatku
                 </Typography>
                 <Stack direction="row" spacing={2} mt={1} alignItems="center">
-                  <DateTimePicker
+                  <TimePicker
                     label="Nový začiatok"
                     value={newStartTime}
-                    onChange={setNewStartTime}
+                    onChange={(newValue) => {
+                      console.log('Selected time:', newValue ? newValue.format('HH:mm') : null);
+                      if (newValue && newValue.isValid()) {
+                        setNewStartTime(newValue);
+                        setValidationErrors((prev) => ({ ...prev, startTime: undefined }));
+                      } else {
+                        setNewStartTime(null);
+                      }
+                    }}
+                    ampm={false}
+                    minutesStep={60}
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -201,54 +290,60 @@ const AddExerciseModal = ({ open, onClose }) => {
                       }
                     }}
                   />
-                  <Button variant="contained" onClick={handleAddStartTime}>
+
+                  <Button
+                    variant="contained"
+                    sx={{ height: 54 }}
+                    onClick={handleAddStartTime}
+                  >
                     Pridať
                   </Button>
                 </Stack>
 
-                {startTimes.length > 0 && (
-                  <Box mt={2}>
-                    <Stack spacing={1}>
-                      {startTimes.map((time, index) => (
-                        <Stack
-                          key={index}
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          sx={{
-                            bgcolor: theme.palette.action.hover,
-                            px: 2,
-                            py: 1,
-                            borderRadius: 1
-                          }}
-                        >
-                          <Typography>{dayjs(time).format('DD.MM.YYYY HH:mm')}</Typography>
-                          <IconButton onClick={() => handleRemoveStartTime(index)} size="small">
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      ))}
+                <Stack mt={1} spacing={1}>
+                  {startTimes.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      Žiadne začiatky zatiaľ pridané
+                    </Typography>
+                  )}
+                  {startTimes.map((time, idx) => (
+                    <Stack
+                      key={time}
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{
+                        p: 1,
+                        backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography>{time}</Typography>
+                      <IconButton size="small" onClick={() => handleRemoveStartTime(idx)}>
+                        <Delete />
+                      </IconButton>
                     </Stack>
-                  </Box>
-                )}
+                  ))}
+                </Stack>
               </Box>
 
-              {/* Color Picker Section */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight={500} mb={1}>
-                  Vyberte farbu
+              <Box flex={1}>
+                <Typography variant="subtitle1" fontWeight={500}>
+                  Farba
                 </Typography>
-                <SketchPicker color={color} onChangeComplete={(c) => setColor(c.hex)} />
+                <SketchPicker
+                  color={color}
+                  onChangeComplete={(color) => setColor(color.hex)}
+                />
               </Box>
             </Stack>
           </Stack>
         </DialogContent>
-
-        <DialogActions sx={{ px: 4, pb: 3, justifyContent: 'space-between' }}>
-          <Button onClick={onClose} variant="outlined" color="inherit">
+        <DialogActions>
+          <Button variant="outlined" onClick={onClose}>
             Zrušiť
           </Button>
-          <Button onClick={handleSubmit} variant="contained" size="large">
+          <Button variant="contained" onClick={handleSubmit}>
             Pridať cvičenie
           </Button>
         </DialogActions>
@@ -259,7 +354,7 @@ const AddExerciseModal = ({ open, onClose }) => {
 
 AddExerciseModal.propTypes = {
   open: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
 
 export default AddExerciseModal;

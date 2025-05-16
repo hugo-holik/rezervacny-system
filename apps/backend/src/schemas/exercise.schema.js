@@ -27,7 +27,10 @@ const createExerciseSchema = Joi.object({
         "number.empty": "Duration is required",
         "number.min": "Duration must be at least 1 minute",
     }),
-    startTimes: Joi.array().items(Joi.date()).min(1).required().messages({
+    startTimes: Joi.array().items(Joi.string()
+        .pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
+        .message("Start time must be in HH:mm format")
+        ).min(1).required().messages({
         "array.min": "Start times must contain at least one start time",
         "array.base": "Start times must be an array of dates",
     }),
@@ -62,7 +65,10 @@ const updateExerciseSchema = Joi.object({
     duration: Joi.number().min(1).optional().messages({
         "number.empty": "Duration must be at least 1 minute",
     }),
-    startTimes: Joi.array().items(Joi.date()).min(1).optional().messages({
+    startTimes: Joi.array().items(Joi.string()
+        .pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/)
+        .message("Start time must be in HH:mm format")
+        ).min(1).required().messages({
         "array.min": "Start times must contain at least one start time",
         "array.base": "Start times must be an array of dates",
     }),

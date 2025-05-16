@@ -3,7 +3,8 @@ import CenteredCheckIcon from '@app/components/table/CenteredCheckIcon';
 import {
   useGetExternalSchoolByIdQuery,
   useGetUsersListQuery,
-  useRemoveUserMutation
+  useRemoveUserMutation,
+  useGetUserMeQuery
 } from '@app/redux/api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, Grid, IconButton, Paper, Tooltip, Typography } from '@mui/material';
@@ -33,7 +34,15 @@ ExternalSchoolCell.propTypes = {
 };
 
 const UsersList = () => {
-  const { data: users = [], isLoading, refetch } = useGetUsersListQuery();
+  const { data: currentUser, isLoading: isCurrentUserLoading } = useGetUserMeQuery();
+
+const shouldFetchUsers =
+  currentUser?.role === 'Správca cvičení' || currentUser?.isAdmin;
+
+const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery(undefined, {
+  skip: !shouldFetchUsers,
+});
+const isLoading = isCurrentUserLoading || usersLoading;
   const [removeUser] = useRemoveUserMutation();
 
   const onRemoveHandler = async (id) => {
@@ -47,7 +56,7 @@ const UsersList = () => {
     }
   };
 
-  console.log("users", users);
+
 
   const columns = [
     { field: 'name', headerName: 'Meno', flex: 1, minWidth: 150 },

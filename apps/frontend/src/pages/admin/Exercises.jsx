@@ -3,7 +3,6 @@ import {
   useDeleteExerciseMutation,
   useGetAllExercisesQuery,
   useGetUserMeQuery,
-  useGetUsersListQuery
 } from '@app/redux/api';
 // import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import DeleteIcon from '@mui/icons-material/Delete';

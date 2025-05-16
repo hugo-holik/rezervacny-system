@@ -42,7 +42,10 @@ const messages = {
 };
 
 const Calendar = () => {
-  const { data: exercises, isLoading, isError } = useGetAllExercisesQuery();
+  const { data: exercises, 
+    isLoading: isExercisesLoading, 
+    isError: isExercisesError
+   } = useGetAllExercisesQuery();
   const {
     data: events,
     isLoading: isEventsLoading,
@@ -57,10 +60,10 @@ const Calendar = () => {
 
 
 
-  // Map events
   useEffect(() => {
-    if (events) {
-      const mappedEvents = events
+  if (events && exercises) {
+    // Mapni eventy
+    const mappedEvents = events
       .filter(event => event.published)
       .map((event) => {
         const start = moment(event.datefrom);
@@ -71,16 +74,35 @@ const Calendar = () => {
           start: start.toDate(),
           end: end.toDate(),
           allDay: false,
-          color: event.published ? '#4caf50' : '#f44336',
+          color: '#4caf50',
+          type: 'event',
           description: '',
         };
       });
-      setCombinedEvents(mappedEvents);
-    }
-  }, [events]);
 
-  if (isLoading || isEventsLoading) return <div>Načítavanie...</div>;
-  if (isError || isEventsError) return <div>Chyba načítavania</div>;
+    // Mapni cvičenia
+    const mappedExercises = exercises.map((exercise) => {
+      const start = moment(exercise.startDate);
+      const end = moment(exercise.endDate || exercise.startDate); // fallback
+      return {
+        _id: exercise._id,
+        title: exercise.name,
+        start: start.toDate(),
+        end: end.toDate(),
+        allDay: false,
+        color: exercise.color ||  '#2196f3',
+        type: 'exercise',
+        description: '',
+      };
+    });
+
+    setCombinedEvents([...mappedEvents, ...mappedExercises]);
+  }
+}, [events, exercises]);
+
+
+  if (isExercisesLoading || isEventsLoading) return <div>Načítavanie...</div>;
+  if (isExercisesError || isEventsError) return <div>Chyba načítavania</div>;
 
   const handleEventClick = (event) => {
     console.log('Event clicked:', event);  // Log the event data

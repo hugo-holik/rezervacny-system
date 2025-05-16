@@ -19,14 +19,7 @@ const History = () => {
   const { data: events = [], isLoading: eventsLoading } = useGetAllEventsQuery();
   const { data: applications = [], isLoading: applicationsLoading } = useGetApplicationsQuery();
   const { data: schools = [], isLoading: schoolsLoading } = useGetAllExternalSchoolsQuery();
-  /*
-  console.log("users",users);
-  console.log("exercises",exercises);
-  console.log("events",events);
-  console.log("schools",schools);
-  console.log("applications: ", applications);
-  */
-  console.log("First user row:", users[0]);
+
 
   const isAnyLoading =
     usersLoading || exercisesLoading || eventsLoading /*|| applicationsLoading */|| schoolsLoading;
