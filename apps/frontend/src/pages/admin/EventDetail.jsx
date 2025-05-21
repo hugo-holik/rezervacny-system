@@ -25,8 +25,11 @@ import {
   Paper,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  Card,
+  CardContent
 } from '@mui/material';
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -45,10 +48,11 @@ const formatTime = (dateString) => {
 
 const EventDetail = () => {
   const { data: currentUser } = useGetUserMeQuery(); // Add this line to get current user
+  const isPrivileged = currentUser?.role === "Správca cvičení" || currentUser?.isAdmin;
 
   const { id: eventId } = useParams();
   const navigate = useNavigate();
-  const { data: event, isLoading } = useGetEventByIdQuery({ Id: eventId });
+  const { data: event, isLoading, refetch: refetchEvent } = useGetEventByIdQuery({ Id: eventId });
   const [deleteEventExercise] = useDeleteEventExerciseMutation();
   const [sendApplication] = useSendApplicationMutation();
   const [editEventExercise] = useEditEventExerciseMutation();
@@ -57,6 +61,33 @@ const EventDetail = () => {
   const [openApplicationDialog, setOpenApplicationDialog] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [numOfAttendees, setNumOfAttendees] = useState(1);
+  console.log("event", event);
+  if (isLoading || !event) {
+    return <div>Načítavam detail udalosti...</div>;
+  }
+
+  //štatistiky
+  const numberOfOpenExercises = event.openExercises?.length || 0;
+  const numberOfApplications = event.openExercises?.reduce(
+    (acc, exercise) => acc + (exercise.attendees?.length || 0),
+    0
+  );
+  const numberOfInterestedAttendees = event.openExercises?.reduce(
+    (acc, exercise) =>
+      acc +
+      (exercise.attendees?.reduce((a, attendee) => a + (attendee.numOfAttendees || 0), 0) || 0),
+    0
+  );
+
+  // Najžiadanejšie cvičenie podľa počtu prihlášok
+  const mostPopularExercise = event.openExercises?.reduce((max, exercise) => {
+    const attendeesCount = exercise.attendees?.length || 0;
+    if (!max || attendeesCount > (max.attendees?.length || 0)) {
+      return exercise;
+    }
+    return max;
+  }, null);
+
 
   const handleDeleteExercise = async (exerciseId) => {
     try {
@@ -330,7 +361,69 @@ const EventDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+
+      {isPrivileged && (
+        <Box
+          sx={{
+            mt: 3,
+            mb: 3,
+            display: 'grid',
+            gap: 2,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          }}
+        >
+          {/* Každá kartička */}
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">
+                Otvorené cvičenia
+              </Typography>
+              <Typography variant="h5">{numberOfOpenExercises}</Typography>
+            </CardContent>
+          </Card>
+
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">
+                Počet prihlášok
+              </Typography>
+              <Typography variant="h5">{numberOfApplications}</Typography>
+            </CardContent>
+          </Card>
+
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">
+                Záujemcovia (účastníci)
+              </Typography>
+              <Typography variant="h5">{numberOfInterestedAttendees}</Typography>
+            </CardContent>
+          </Card>
+
+          <Card elevation={3}>
+            <CardContent>
+              <Typography variant="subtitle2" color="textSecondary">
+                Najžiadanejšie cvičenie
+              </Typography>
+              {mostPopularExercise ? (
+                <>
+                  <Typography variant="body1" fontWeight="bold">
+                    {mostPopularExercise.exerciseName}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {formatTime(mostPopularExercise.startTime)}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="body2" color="textSecondary">
+                  Žiadne cvičenie
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+    </Box>   
   );
 };
 
