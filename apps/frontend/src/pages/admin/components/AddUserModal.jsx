@@ -52,7 +52,6 @@ const AddUserModal = () => {
   const handleClose = () => setOpen(false);
 
   const onSubmit = async (data) => {
-    console.log(data);
 
     // Validation for externalSchool based on role
     if (data.role === 'Externý učiteľ' && !data.externalSchool) {

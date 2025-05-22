@@ -7,10 +7,16 @@ const { validate, validated } = require("../util/validation");
 const { sendApplicationSchema } = require("../schemas/event.schema");
 const { buildApplicationsData } = require("../services/applicationsHelper");
 const externalSchool = require("../models/externalSchool");
+const exercise = require("../models/exercise");
 
 exports.get = async (req, res) => {
   try {
-    const eventRecords = await Event.find({});
+    const eventRecords = await Event.find({})
+    .populate({
+      path: 'openExercises.exercise',
+      model: Exercise,
+      select: 'duration'
+    });
     res.status(200).send(eventRecords);
   } catch (err) {
     throwError(err.message, 500);
@@ -18,11 +24,20 @@ exports.get = async (req, res) => {
 };
 
 exports.getEventById = async (req, res) => {
-  const eventRecord = await Event.findById(req.params.id);
-  if (!eventRecord) {
-    return res.status(404).send();
+  try {
+    const eventRecord = await Event.findById(req.params.id)
+      .populate({
+        path: 'openExercises.exercise',
+        model: Exercise,
+        select: 'duration'
+      });
+    if (!eventRecord) {
+      return res.status(404).send();
+    }
+    res.send(eventRecord);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
   }
-  res.send(eventRecord);
 };
 
 exports.create = [

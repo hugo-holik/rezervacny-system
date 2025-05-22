@@ -15,6 +15,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Autocomplete,
   TextField,
   Typography
 } from '@mui/material';
@@ -22,12 +23,19 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(null);
+  const [exerciseInput, setExerciseInput] = useState('');
   const [exerciseId, setExerciseId] = useState('');
+  const [time, setTime] = useState('')
   const [note, setNote] = useState('');
   const [addEventExercise] = useAddEventExerciseMutation();
   const { data: exercises = [] } = useGetAllExercisesQuery();
@@ -43,20 +51,26 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const minDate = dayjs(eventData.datefrom);
   const maxDate = dayjs(eventData.dateto);
 
-  const filteredExercises = exercises.filter((exercise) => {
-    const rawDate = exercise.startTimes?.[0];
-    if (!rawDate) return false;
-
-    const exerciseDate = new Date(rawDate);
-    const isValid = !isNaN(exerciseDate);
-
-    if (!isValid) {
-      console.warn('Neplatný dátum cvičenia:', exercise);
-      return false;
-    }
-
-    return exerciseDate >= eventStart && exerciseDate <= eventEnd;
-  });
+  //cvicenia
+  const filteredExercises = exercises;
+  //Filtrovanie cviceni podla textu v inpute 
+  const filteredExercisesByName = filteredExercises.filter((exercise) =>
+  exercise.name.toLowerCase().includes(exerciseInput.toLowerCase())
+  );
+  //Pole možností tak, že každý čas z cvičenia je jedna možnosť (kombinácia)
+  const options = filteredExercisesByName.flatMap(exercise =>
+    exercise.startTimes.map(time => ({
+      label: `${exercise.name} – ${time}`,
+      exerciseId: exercise._id,
+      time
+    }))
+  );
+  // Vybrana Hodnota - objekt, alebo null
+  const selectedOption = exerciseId && time ? {
+    exerciseId,
+    time,
+    label: `${exercises.find(e => e._id === exerciseId)?.name} – ${time}`
+  } : null;
 
   const formatDateTime = (isoDate) => {
     const date = new Date(isoDate);
@@ -65,6 +79,9 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   };
 
   const handleSubmit = async () => {
+
+    
+
     try {
       const allEvents = events || [];
       const selectedEvent = allEvents.find((e) => e._id === eventData._id);
@@ -73,9 +90,18 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
       const selectedExercise = exercises.find((e) => e._id === exerciseId);
       if (!selectedExercise) throw new Error('Exercise not found');
 
+ 
+
+      if (!time) throw new Error('Cvičenie nemá platný čas začiatku');
+
+      const dateString = date.format('YYYY-MM-DD');
+      const dateTimeString = `${dateString}T${time}:00`;
+      const dateWithTime = dayjs.tz(dateTimeString, 'Europe/Bratislava').toISOString();
+
+
       const newExercise = {
-        date,
-        startTime: selectedExercise.startTimes[0], // ✅ just one string
+        date: dateWithTime,
+        startTime: time,
         exercise: exerciseId,
         exerciseName: selectedExercise.name,
         attendees: [
@@ -89,7 +115,6 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
         status: 'čaká na schválenie',
         note
       };
-
       await addEventExercise({ Id: selectedEvent._id, ...newExercise }).unwrap();
 
       onClose();
@@ -130,8 +155,8 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
               }
             }}
             label="Dátum"
-            value={date ? dayjs(date) : null}
-            onChange={(newValue) => setDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
+            value={date}
+            onChange={(newValue) => setDate(newValue)}
             minDate={minDate}
             maxDate={maxDate}
             shouldDisableDate={(date) => !isDateInRange(date)}
@@ -140,23 +165,30 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
             )}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel id="exercise-select-label">Vyber cvičenie</InputLabel>
-            <Select
-              labelId="exercise-select-label"
-              value={exerciseId}
-              label="Vyber cvičenie"
-              onChange={(e) => setExerciseId(e.target.value)}
-            >
-              {filteredExercises.length === 0 ? (
-                <MenuItem disabled>Žiadne cvičenia v tomto dátume</MenuItem>
-              ) : (
-                filteredExercises.map((exercise) => (
-                  <MenuItem key={exercise._id} value={exercise._id}>
-                    {exercise.name} – {formatDateTime(exercise.startTimes?.[0])}
-                  </MenuItem>
-                ))
-              )}
-            </Select>
+              <Autocomplete
+                options={options}
+                getOptionLabel={(option) => option.label}
+                value={selectedOption}
+                onChange={(_, newValue) => {
+                  if (newValue) {
+                    setExerciseId(newValue.exerciseId);
+                    setTime(newValue.time);
+                  } else {
+                    setExerciseId('');
+                    setTime('');
+                  }
+                }}
+                inputValue={exerciseInput}
+                onInputChange={(_, newInputValue) => setExerciseInput(newInputValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Vyber cvičenie"
+                    margin="normal"
+                    fullWidth
+                  />
+                )}
+              />
           </FormControl>
           <TextField
             fullWidth

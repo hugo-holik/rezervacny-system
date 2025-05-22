@@ -37,7 +37,7 @@ const AddEventModal = ({ open, onClose }) => {
   });
 
   const onSubmit = async (data) => {
-    console.log('Form data:', data);
+
     // Convert dates to ISO string format without time
     const formData = {
       ...data,

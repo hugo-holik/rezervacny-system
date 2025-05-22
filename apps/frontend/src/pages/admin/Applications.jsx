@@ -39,7 +39,6 @@ const Applications = () => {
 
   const { data: applications = [], isLoading: isApplicationsLoading, isError:isApplicationsError } = useGetApplicationsQuery();
   const { data: colleagueApplications, isLoading: isColleaguesLoading, error: colleaguesError } = useGetColleaguesApplicationsQuery();
-  console.log("colleagueApplications", colleagueApplications);
   const [deleteApplication] = useDeleteApplicationMutation();
   const [editApplication] = useEditApplicationMutation();
 
@@ -98,14 +97,6 @@ const filteredColleagueApplications = colleagueApplications?.filter(
 ) || [];
 
 
-//console.log(applications);
-
-/*
-  console.log("event", events);
-  console.log("application", applications);
-  console.log("applicationsFromEvents",applicationsFromEvents);
-  */
-
   const openEditDialog = (application) => {
     setSelectedApplication(application);
     setNumOfAttendees(application.numOfAttendees);
@@ -135,7 +126,6 @@ const filteredColleagueApplications = colleagueApplications?.filter(
 
   const handleApproveApplication = async ({ eventId, exerciseId, applicationId }) => {
   try {
-    console.log("Approving application with data:", { eventId, exerciseId, applicationId });
 
     // Posielame PUT request s approvalState a approvedAt dátami
     const result = await editApplication({
@@ -145,8 +135,6 @@ const filteredColleagueApplications = colleagueApplications?.filter(
       approvalState: 'schválené',
       approvedAt: new Date().toISOString(),
     }).unwrap();
-
-    console.log("Prihláška bola úspešne potvrdená", result);
     refetch();
 
   } catch (error) {

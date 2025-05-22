@@ -277,7 +277,6 @@ const AddExerciseModal = ({ open, onClose }) => {
                     label="Nový začiatok"
                     value={newStartTime}
                     onChange={(newValue) => {
-                      console.log('Selected time:', newValue ? newValue.format('HH:mm') : null);
                       if (newValue && newValue.isValid()) {
                         setNewStartTime(newValue);
                         setValidationErrors((prev) => ({ ...prev, startTime: undefined }));

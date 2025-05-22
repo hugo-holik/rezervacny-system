@@ -61,8 +61,8 @@ const Calendar = () => {
 
 
   useEffect(() => {
-  if (events && exercises) {
-    // Mapni eventy
+  if (events) {
+    // Mapni eventy (len publikované)
     const mappedEvents = events
       .filter(event => event.published)
       .map((event) => {
@@ -80,38 +80,45 @@ const Calendar = () => {
         };
       });
 
-    // Mapni cvičenia
-    const mappedExercises = exercises.map((exercise) => {
-      const start = moment(exercise.startDate);
-      const end = moment(exercise.endDate || exercise.startDate); // fallback
-      return {
-        _id: exercise._id,
-        title: exercise.name,
-        start: start.toDate(),
-        end: end.toDate(),
-        allDay: false,
-        color: exercise.color ||  '#2196f3',
-        type: 'exercise',
-        description: '',
-      };
-    });
+    // Mapni cvičenia z event.openExercises všetkých publikovaných eventov
+    const mappedExercises = events
+      .filter(event => event.published && event.openExercises && event.openExercises.length > 0)
+      .flatMap(event => 
+        event.openExercises.map(openExercise => {
+          const startMoment = moment(openExercise.date);
+          const durationHours = openExercise.exercise?.duration;
+          console.log("durationHours", durationHours);
+          const endMoment = startMoment.clone().add(durationHours, 'hours');
+
+          return {
+            _id: openExercise._id,
+            title: openExercise.name,
+            start: startMoment.toDate(),
+            end: endMoment.toDate(),
+            allDay: false,
+            color: openExercise.color || '#2196f3',
+            type: 'exercise',
+            description: openExercise.note || '',
+            attendeesCount: openExercise.attendees.length
+          };
+        })
+      );
 
     setCombinedEvents([...mappedEvents, ...mappedExercises]);
   }
-}, [events, exercises]);
+}, [events]);
+
 
 
   if (isExercisesLoading || isEventsLoading) return <div>Načítavanie...</div>;
   if (isExercisesError || isEventsError) return <div>Chyba načítavania</div>;
 
   const handleEventClick = (event) => {
-    console.log('Event clicked:', event);  // Log the event data
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
   
   const handleGoToDetails = () => {
-    console.log('Selected Event ID:', selectedEvent?._id);  // Log the event ID
     if (selectedEvent && selectedEvent._id) {
       navigate(`/events/${selectedEvent._id}`);
     } else {

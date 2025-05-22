@@ -34,7 +34,7 @@ const Events = () => {
   const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
   const navigate = useNavigate();
   const [togglePublished] = useTogglePublishedMutation();
-  console.log(togglePublished);
+
 
   const [deleteEvent] = useDeleteEventMutation();
 

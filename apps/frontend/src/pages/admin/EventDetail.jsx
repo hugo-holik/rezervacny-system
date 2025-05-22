@@ -61,7 +61,7 @@ const EventDetail = () => {
   const [openApplicationDialog, setOpenApplicationDialog] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [numOfAttendees, setNumOfAttendees] = useState(1);
-  console.log("event", event);
+
   if (isLoading || !event) {
     return <div>Načítavam detail udalosti...</div>;
   }
