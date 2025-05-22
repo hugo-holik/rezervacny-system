@@ -12,9 +12,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  Tooltip,
   Autocomplete,
   TextField,
   Typography
@@ -22,6 +20,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -60,15 +59,20 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   //Pole možností tak, že každý čas z cvičenia je jedna možnosť (kombinácia)
   const options = filteredExercisesByName.flatMap(exercise =>
     exercise.startTimes.map(time => ({
-      label: `${exercise.name} – ${time}`,
+      label: `${exercise.name} – ${time} – ${exercise.room}`,
       exerciseId: exercise._id,
-      time
+      time,
+      name: exercise.name,
+      room: exercise.room
     }))
   );
   // Vybrana Hodnota - objekt, alebo null
+  const selectedExercise = exercises.find(e => e._id === exerciseId);
   const selectedOption = exerciseId && time ? {
     exerciseId,
     time,
+    name: selectedExercise?.name,
+    room: selectedExercise?.room,
     label: `${exercises.find(e => e._id === exerciseId)?.name} – ${time}`
   } : null;
 
@@ -79,28 +83,43 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   };
 
   const handleSubmit = async () => {
-
-    
-
     try {
       const allEvents = events || [];
       const selectedEvent = allEvents.find((e) => e._id === eventData._id);
-      if (!selectedEvent) throw new Error('Event not found');
+      if (!selectedEvent) throw new Error('Event nenájdený');
 
       const selectedExercise = exercises.find((e) => e._id === exerciseId);
-      if (!selectedExercise) throw new Error('Exercise not found');
-
- 
-
+      if (!selectedExercise) throw new Error('cvičenie nenájdené');
       if (!time) throw new Error('Cvičenie nemá platný čas začiatku');
 
+      const room = selectedExercise.room;
+      const duration = selectedExercise.duration;
+      //spajanie date a startTime
       const dateString = date.format('YYYY-MM-DD');
       const dateTimeString = `${dateString}T${time}:00`;
-      const dateWithTime = dayjs.tz(dateTimeString, 'Europe/Bratislava').toISOString();
+      const startDate = dayjs.tz(dateTimeString, 'Europe/Bratislava');
+      const endDate = startDate.add(duration, 'hour'); 
 
+      //kontrola ci existuje kolizia v cviceniach
+      const allEventExercises = allEvents.flatMap(e => e.openExercises || []);
+      const conflicting =allEventExercises.find((ex) => {
+        if (ex.status !== 'schválené') return false;
+
+        const existingStart = dayjs(ex.date);
+        const existingEnd = existingStart.add(duration, 'hour');
+        const sameRoom = exercises.find(e => e._id === ex.exercise)?.room === room;
+
+        const overlaps = startDate.isBefore(existingEnd) && endDate.isAfter(existingStart);
+        return sameRoom && overlaps;
+      });
+
+      if(conflicting){
+        toast.error('V zadanom čase a miestnosti už existuje schválené cvičenie, ktoré sa prekrýva.');
+        return;
+      }
 
       const newExercise = {
-        date: dateWithTime,
+        date: startDate,
         startTime: time,
         exercise: exerciseId,
         exerciseName: selectedExercise.name,
@@ -115,19 +134,23 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
         status: 'čaká na schválenie',
         note
       };
-      await addEventExercise({ Id: selectedEvent._id, ...newExercise }).unwrap();
 
-      onClose();
+      const response = await addEventExercise({ Id: selectedEvent._id, ...newExercise }).unwrap();
+      
+      if (!response.error) {
+           toast.success('Cvičenie bolo úspešne pridané.');
+           onClose();
+      }
+
     } catch (error) {
       console.error('Error adding exercise:', error);
+      toast.error( error?.data?.error || 'Nastala chyba pri pridávaní cvičenia.');
     }
   };
 
   const isDateInRange = (date) => {
     if (!date) return true;
     const selectedDate = dayjs(date);
-
-    // Fix the logic to include both start and end dates
     return (
       (selectedDate.isAfter(minDate) || selectedDate.isSame(minDate, 'day')) &&
       (selectedDate.isBefore(maxDate) || selectedDate.isSame(maxDate, 'day'))
@@ -165,9 +188,10 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
             )}
           />
           <FormControl fullWidth margin="normal">
+            <Tooltip title="Môžeš vyhladať podla názvu cvičenia">
               <Autocomplete
                 options={options}
-                getOptionLabel={(option) => option.label}
+                getOptionLabel={(option) => `${option.name} – ${option.time} – ${option.room}`}
                 value={selectedOption}
                 onChange={(_, newValue) => {
                   if (newValue) {
@@ -189,7 +213,9 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
                   />
                 )}
               />
+            </Tooltip>
           </FormControl>
+
           <TextField
             fullWidth
             label="Poznámka"

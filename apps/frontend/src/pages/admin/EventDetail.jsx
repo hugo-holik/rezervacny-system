@@ -119,6 +119,13 @@ const EventDetail = () => {
   const handleSubmitApplication = async () => {
     if (!selectedExercise || !numOfAttendees) return;
 
+    const maxAttendees = selectedExercise.exercise.maxAttendees;
+
+     if (Number(numOfAttendees) > maxAttendees) {
+      toast.error(`Maximálny počet účastníkov je ${maxAttendees}`);
+      return;
+    }
+
     try {
       await sendApplication({
         eventId,
@@ -146,7 +153,6 @@ const EventDetail = () => {
       console.error('Approve error:', error);
     }
   };
-
   const columns = [
     {
       field: 'exerciseName',
@@ -344,6 +350,9 @@ const EventDetail = () => {
             <Typography variant="body1" gutterBottom>
               <strong>Čas:</strong> {selectedExercise?.startTime}
             </Typography>
+            <Typography variant="body1" gutterBottom>
+              <strong>Maximálny počet učastnikov:</strong> {selectedExercise?.exercise.maxAttendees}
+            </Typography>
             <TextField
               label="Počet účastníkov"
               type="number"
@@ -351,7 +360,18 @@ const EventDetail = () => {
               margin="normal"
               value={numOfAttendees}
               onChange={(e) => setNumOfAttendees(e.target.value)}
-              inputProps={{ min: 1 }}
+              inputProps={{ 
+                min: 1 ,
+                max: selectedExercise?.exercise.maxAttendees || undefined
+                }}
+                error = {
+                  !!numOfAttendees && Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees
+                }
+                helperText={
+                  !!numOfAttendees && Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees
+                    ?`Maximálny počet účastníkov je ${selectedExercise.exercise.maxAttendees}`
+                    : ''
+                }
             />
           </Box>
         </DialogContent>
@@ -360,7 +380,7 @@ const EventDetail = () => {
           <Button
             onClick={handleSubmitApplication}
             variant="contained"
-            disabled={!numOfAttendees || numOfAttendees < 1}
+            disabled={!numOfAttendees || numOfAttendees < 1 || Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees}
           >
             Potvrdiť
           </Button>
