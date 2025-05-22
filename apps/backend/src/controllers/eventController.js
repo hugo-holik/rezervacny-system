@@ -15,7 +15,7 @@ exports.get = async (req, res) => {
     .populate({
       path: 'openExercises.exercise',
       model: Exercise,
-      select: 'duration'
+      select: 'duration maxAttendees'
     });
     res.status(200).send(eventRecords);
   } catch (err) {
@@ -29,7 +29,7 @@ exports.getEventById = async (req, res) => {
       .populate({
         path: 'openExercises.exercise',
         model: Exercise,
-        select: 'duration'
+        select: 'duration maxAttendees'
       });
     if (!eventRecord) {
       return res.status(404).send();

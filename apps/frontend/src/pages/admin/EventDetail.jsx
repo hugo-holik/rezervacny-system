@@ -39,6 +39,12 @@ const formatDate = (dateString) => {
   const pad = (n) => String(n).padStart(2, '0');
   return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
 };
+const formatDateFavourite = (dateString) => {
+  const date = new Date(dateString);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 
 const formatTime = (dateString) => {
   const date = new Date(dateString);
@@ -160,7 +166,6 @@ const EventDetail = () => {
       field: 'startTime',
       headerName: 'Čas začiatku',
       flex: 1,
-      valueFormatter: (params) => formatTime(params),
       cellClassName: 'vertical-align-center'
     },
     {
@@ -337,7 +342,7 @@ const EventDetail = () => {
               <strong>Dátum:</strong> {selectedExercise && formatDate(selectedExercise.date)}
             </Typography>
             <Typography variant="body1" gutterBottom>
-              <strong>Čas:</strong> {selectedExercise && formatTime(selectedExercise.startTime)}
+              <strong>Čas:</strong> {selectedExercise?.startTime}
             </Typography>
             <TextField
               label="Počet účastníkov"
@@ -411,7 +416,7 @@ const EventDetail = () => {
                     {mostPopularExercise.exerciseName}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {formatTime(mostPopularExercise.startTime)}
+                    {formatDateFavourite(mostPopularExercise.date)}
                   </Typography>
                 </>
               ) : (

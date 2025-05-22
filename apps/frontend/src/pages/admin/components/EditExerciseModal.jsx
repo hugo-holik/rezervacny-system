@@ -84,6 +84,7 @@ const EditExerciseModal = ({ open, onClose, exerciseData, users }) => {
       maxAttendees: parseInt(maxAttendees),
       color,
       leads,
+      //TODO: Upravit na novy sposob ukladania startTimes a.k.a ["08:00", "10:00"]
       startTimes: startTimes.map((time) => time.toISOString())
     };
 

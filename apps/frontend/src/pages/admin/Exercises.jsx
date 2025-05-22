@@ -42,6 +42,7 @@ const Exercises = () => {
     const response = await deleteExercise(id);
     if (!response.error) {
       toast.success('Cvičenie bolo úspešne odstránené');
+      refetch();
     } else {
       toast.error('Chyba pri odstraňovaní cvičenia: ' + response.error?.data?.message);
     }

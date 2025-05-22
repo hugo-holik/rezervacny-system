@@ -50,7 +50,7 @@ const ViewEventModal = ({ open, onClose, eventData }) => {
                     <>
                       <strong>{exercise.exerciseName}</strong> <br />
                       <span>Dátum: {formatDate(exercise.date)}</span> <br />
-                      <span>Čas: {formatTime(exercise.startTime)}</span>
+                      <span>Čas: {exercise.startTime}</span>
                     </>
                   }
                   secondary={
