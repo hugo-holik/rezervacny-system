@@ -192,6 +192,13 @@ export const api = createApi({
       }),
       invalidatesTags: ['Events']
     }),
+    deleteOldEvents: builder.mutation({
+      query: () => ({
+        url: '/event/old',
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Events']
+    }),
     addEventExercise: builder.mutation({
       query: ({ Id, ...data }) => ({
         url: `/event/addExercise/${Id}`,
@@ -310,6 +317,7 @@ export const {
   useCreateEventMutation,
   useEditEventMutation,
   useDeleteEventMutation,
+  useDeleteOldEventsMutation,
   useAddEventExerciseMutation,
   useEditEventExerciseMutation,
   useDeleteEventExerciseMutation,

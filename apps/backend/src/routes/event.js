@@ -16,7 +16,8 @@ const {
   editApplication,
   deleteApplication,
   updateAttendeeStatus,
-  togglePublished
+  togglePublished,
+  removeOldEvents
 } = require("../controllers/eventController");
 
 const router = express.Router();
@@ -40,9 +41,11 @@ router.delete(
 router.put("/togglePublished/:eventId", togglePublished);
 router.post("/", create);
 router.get("/", get);
+router.delete("/old", removeOldEvents);
 router.get("/:id", getEventById);
 router.put("/:id", edit);
 router.delete("/:id", remove);
+
 
 // otvorene cvicenia
 router.post("/addExercise/:id", addExcercise);

@@ -121,6 +121,20 @@ exports.remove = async (req, res) => {
     throwError(req.t("messages.record_not_exists"), 404);
   }
 };
+exports.removeOldEvents = async (req, res) => {
+  try {
+    const today = new Date();
+    const result = await Event.deleteMany({ dateto: { $lt: today } });
+
+    res.status(200).json({
+      message: `${result.deletedCount} udalostí bolo vymazaných.`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
+  }
+};
+
 
 // Otvorene cvicenia
 

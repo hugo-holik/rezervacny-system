@@ -39,27 +39,21 @@ const UsersList = () => {
 const { data: currentUser, isLoading: isCurrentUserLoading } = useGetUserMeQuery();
 
 const shouldFetchUsers =currentUser?.role === 'Správca cvičení' || currentUser?.isAdmin;
-const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useGetUsersListQuery(undefined, {skip: !shouldFetchUsers});
+
+const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useGetUsersListQuery(undefined, {skip: isCurrentUserLoading || !shouldFetchUsers});
 const [removeUser] = useRemoveUserMutation();
 
-useEffect(() => {
-  if (shouldFetchUsers) {
-    refetchUsers();
-  }
-}, [shouldFetchUsers,refetchUsers]);
+if (!isCurrentUserLoading && !currentUser) {
+  return <div>Chyba: Nie ste prihlásený alebo nemáte oprávnenie. Skúste sa prihlásiť znovu</div>;
+}
 
 const isLoading = isCurrentUserLoading || usersLoading;
 if (isLoading) {
-  return <div>Načítavam detail udalosti...</div>;
+  return <div>Načítavam detail užívatelov...</div>;
 }
 
-/*
-if (isLoading || !users) {
-    return <div>Načítavam detail udalosti...</div>;
-}
-*/
-  const onRemoveHandler = async (id) => {
-    const response = await removeUser(id);
+const onRemoveHandler = async (id) => {
+  const response = await removeUser(id);
     if (!response.error) {
       toast.success('Uzivatel bol uspesne odstraneny');
       refetch();

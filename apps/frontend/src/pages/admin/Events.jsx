@@ -1,5 +1,5 @@
 import ConfirmationDialog from '@app/components/ConfirmationDialog';
-import { useDeleteEventMutation, useGetAllEventsQuery, useGetUserMeQuery, useTogglePublishedMutation } from '@app/redux/api';
+import { useDeleteEventMutation, useDeleteOldEventsMutation , useGetAllEventsQuery, useGetUserMeQuery, useTogglePublishedMutation } from '@app/redux/api';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -34,6 +34,8 @@ const Events = () => {
   const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
   const navigate = useNavigate();
   const [togglePublished] = useTogglePublishedMutation();
+  const [deleteOldEvents, {isLoading: isLoadingDeleteOldEvents}] = useDeleteOldEventsMutation();
+
 
 
   const [deleteEvent] = useDeleteEventMutation();
@@ -52,7 +54,6 @@ const Events = () => {
     navigate(`/events/${event._id}`);
   };
 
-  //TODO: pridat API ked bude rdy
   const handleTogglePublished = async (event) => {
     try {
       await togglePublished(event._id); // voláme API s ID eventu
@@ -74,6 +75,20 @@ const Events = () => {
         console.error('Delete error:', error);
       });
   };
+  const handleDeleteOldEvents = async () => {
+    const confirmed = window.confirm("Naozaj chcete vymazať všetky staré udalosti?");
+    if (!confirmed) return;
+
+    try {
+      const result = await deleteOldEvents().unwrap();
+      toast.success("Staré udalosti boli úspešne vymazané.");
+      // prípadne tu môžeš zavolať refetch, ak máš nejaký query manuálne
+    } catch (error) {
+      toast.error("Chyba pri mazaní starých udalostí.");
+      console.error(error);
+    }
+  };
+
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -86,9 +101,14 @@ const Events = () => {
       <Grid container justifyContent="space-between" alignItems="center" px={1}>
         <Typography variant="h4">Špeciálne cvičenia</Typography>
         {(roleCheck || currentUser.isAdmin) && (
+          <Box display="flex" gap= {2}>
           <Button variant="contained" onClick={() => setOpenAddModal(true)}>
             Pridaj udalosť
           </Button>
+          <Button variant="contained" onClick={() => handleDeleteOldEvents()}>
+            Vymazanie starých eventov
+          </Button>
+          </Box>
         )}
       </Grid>
 
@@ -98,8 +118,16 @@ const Events = () => {
         ) : (
           (events || [])
             .filter(event => {
+              const today = new Date();
+              const start = new Date(event.datefrom);
+              const end = new Date(event.dateto);
+
               if (currentUser.role === 'Externý učiteľ') {
-              return event.published;
+              return (
+                event.published &&
+                today >= start &&
+                today <= end
+              );
             }
             return true;
           }).map((event) => (
