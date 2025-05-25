@@ -1,129 +1,61 @@
-import { Box, Typography } from '@mui/material';
-import { Tabs, Tab, CircularProgress } from '@mui/material';
+import { useGetApplicationsHistoryQuery } from '@app/redux/api';import { Box, Grid, Paper, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { useState } from 'react';
-
-import {
-  useGetUsersListQuery,
-  useGetAllExercisesQuery,
-  useGetAllEventsQuery,
-  useGetApplicationsQuery,
-  useGetAllExternalSchoolsQuery
-} from '@app/redux/api';
 
 const History = () => {
-  const [tabIndex, setTabIndex] = useState(0);
+  const { data, isLoading } = useGetApplicationsHistoryQuery();
 
-  const { data: users = [], isLoading: usersLoading } = useGetUsersListQuery();
-  const { data: exercises = [], isLoading: exercisesLoading } = useGetAllExercisesQuery();
-  const { data: events = [], isLoading: eventsLoading } = useGetAllEventsQuery();
-  const { data: applications = [], isLoading: applicationsLoading } = useGetApplicationsQuery();
-  const { data: schools = [], isLoading: schoolsLoading } = useGetAllExternalSchoolsQuery();
+  const columns = [
+    { field: 'exerciseName', headerName: 'Názov cvičenia', flex: 1, minWidth: 150 },
+    { field: 'numOfAttendees', headerName: 'Počet účastníkov', flex: 1 },
+    { field: 'date', headerName: 'Dátum', flex: 1 },
+    { field: 'createdAt', headerName: 'Podané o', flex: 1 },
+    { field: 'approvedAt', headerName: 'Potvrdené o', flex: 1 }
+  ];
 
-
-  const isAnyLoading =
-    usersLoading || exercisesLoading || eventsLoading /*|| applicationsLoading */|| schoolsLoading;
-
-    const tabs = [
-      {
-        label: 'Používatelia',
-        rows: users,
-        columns: [
-          { field: 'email', headerName: 'Email', flex: 1 },
-          { field: 'role', headerName: 'Rola', flex: 1 },
-          {
-            field: 'createdAt',
-            headerName: 'Vytvorený',
-            flex: 1,
-            valueGetter: (params) => {
-              const dateStr = params.row?.createdAt;
-              return dateStr
-                ? new Date(dateStr).toLocaleDateString('sk-SK', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })
-                : 'N/A';
-            },
-          },          
-        ],
-      },
-      {
-        label: 'Cvičenia',
-        rows: exercises,
-        columns: [
-          { field: 'name', headerName: 'Názov', flex: 1 },
-          { field: 'description', headerName: 'Popis', flex: 1 },
-        ],
-      },
-      {
-        label: 'Udalosti',
-        rows: events,
-        columns: [
-          { field: 'name', headerName: 'Názov', flex: 1 },
-        ],
-      },/*
-      {
-        label: 'Prihlášky',
-        rows: applications,
-        columns: [
-          { field: '_id', headerName: 'ID', flex: 1 },
-          {
-            field: 'user',
-            headerName: 'Používateľ',
-            flex: 1,
-            valueGetter: (params) => params.row?.user?.name || '-',
-          },
-        ],
-      },*/
-      {
-        label: 'Školy',
-        rows: schools,
-        columns: [
-          { field: 'name', headerName: 'Názov školy', flex: 1 },
-        ],
-      },
-    ];
-    
-
-  const handleTabChange = (event, newValue) => {
-    setTabIndex(newValue);
+  const handleRowClick = (params) => {
+    //NOTE ak chceme na dvojklik nejaku aktivitu
+    console.log(params);
   };
 
-  const currentTab = tabs[tabIndex];
-
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        História
-      </Typography>
-
-      <Tabs value={tabIndex} onChange={handleTabChange} sx={{ mb: 2 }}>
-        {tabs.map((tab, index) => (
-          <Tab key={index} label={tab.label} />
-        ))}
-      </Tabs>
-
-      {isAnyLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Box sx={{ height: 500, width: '100%' }}>
+    <Box py={2}>
+      <Grid py={1} px={1} container spacing={1}>
+        <Grid size={{ xs: 12, sm: 9 }} display={'flex'}>
+          <Typography variant="h4" alignSelf={'center'}>
+            História
+          </Typography>
+        </Grid>
+      </Grid>
+      <Paper sx={{ mt: 2 }}>
         <DataGrid
-          rows={currentTab.rows
-            .filter((item) => !!item && !!item._id)
-            .map((item) => ({
-              ...item,
-              id: item._id, // zachováme všetky ostatné polia vrátane createdAt
-            }))}
-          columns={currentTab.columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          components={{ Toolbar: GridToolbar }}
+          loading={isLoading}
+          rows={data}
+          columns={columns}
+          getRowId={(row) => row.exerciseId}
+          pageSizeOptions={[10, 20, 50]}
+          initialState={{
+            density: 'standard',
+            pagination: {
+              paginationModel: {
+                pageSize: 20
+              }
+            }
+          }}
+          isRowSelectable={() => false}
+          slots={{
+            toolbar: GridToolbar
+          }}
+          slotProps={{
+            toolbar: {
+              showQuickFilter: true
+            }
+          }}
+          ignoreDiacritics
+          onRowDoubleClick={(params) => {
+            handleRowClick(params);
+          }}
         />
-        </Box>
-      )}
+      </Paper>
     </Box>
   );
 };
