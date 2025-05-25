@@ -414,7 +414,7 @@ exports.getApplicationsHistory = async (req, res) => {
     const exercises = await Exercise.find();
     const dateNow = new Date();
     const applications = await buildApplicationsData(events, exercises, {
-      filterStartDate: dateNow
+      filterFromDate: dateNow
     });
 
     res.send(applications);
