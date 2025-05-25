@@ -1,15 +1,40 @@
 import { useGetApplicationsHistoryQuery } from '@app/redux/api';import { Box, Grid, Paper, Typography } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { format } from 'date-fns';
 
 const History = () => {
   const { data, isLoading } = useGetApplicationsHistoryQuery();
 
   const columns = [
-    { field: 'exerciseName', headerName: 'Názov cvičenia', flex: 1, minWidth: 150 },
-    { field: 'numOfAttendees', headerName: 'Počet účastníkov', flex: 1 },
-    { field: 'date', headerName: 'Dátum', flex: 1 },
-    { field: 'createdAt', headerName: 'Podané o', flex: 1 },
-    { field: 'approvedAt', headerName: 'Potvrdené o', flex: 1 }
+    { 
+      field: 'exerciseName',
+      headerName: 'Názov cvičenia',
+      flex: 1,
+      minWidth: 150
+    },
+    { 
+      field: 'numOfAttendees',
+      headerName: 'Počet účastníkov',
+      flex: 1 
+    },
+    { 
+      field: 'date',
+      headerName: 'Dátum',
+      flex: 1,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
+    },
+    { 
+      field: 'createdAt',
+      headerName: 'Podané o',
+      flex: 1,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
+    },
+    { 
+      field: 'approvedAt',
+      headerName: 'Potvrdené o',
+      flex: 1,
+      valueFormatter: (params) => formatDate(params, 'dd.MM.yyyy HH:mm')
+    }
   ];
 
   const handleRowClick = (params) => {
@@ -58,6 +83,14 @@ const History = () => {
       </Paper>
     </Box>
   );
+};
+
+const formatDate = (dateString, formatString) => {
+    try {
+      return dateString ? format(new Date(dateString), formatString) : 'N/A';
+    } catch {
+      return 'Invalid Date';
+    }
 };
 
 export default History;
