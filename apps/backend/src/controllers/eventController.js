@@ -19,7 +19,7 @@ exports.get = async (req, res) => {
     });
     res.status(200).send(eventRecords);
   } catch (err) {
-    throwError(err.message, 500);
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -32,11 +32,11 @@ exports.getEventById = async (req, res) => {
         select: 'duration maxAttendees room'
       });
     if (!eventRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.event_not_found'), 404);
     }
     res.send(eventRecord);
   } catch (err) {
-    res.status(500).send({ message: err.message });
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -90,7 +90,7 @@ exports.edit = [
 
     const eventRecord = await Event.findOne({ _id: req.params.id });
     if (!eventRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.event_not_found'), 404);
     }
 
     try {
@@ -110,17 +110,21 @@ exports.edit = [
 
 exports.remove = async (req, res) => {
   const eventRecord = await Event.findOne({ _id: req.params.id });
+
   if (eventRecord) {
     try {
       await Event.deleteOne({ _id: req.params.id });
       res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
+
   } else {
     throwError(req.t("messages.record_not_exists"), 404);
   }
 };
+
 exports.removeOldEvents = async (req, res) => {
   try {
     const today = new Date();
@@ -140,10 +144,10 @@ exports.removeOldEvents = async (req, res) => {
 
 exports.addExcercise = async (req, res) => {
   const { exerciseName } = req.body;
-  console.log("exerciseName", exerciseName);
+
   const eventRecord = await Event.findOne({ _id: req.params.id });
   if (!eventRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.event_not_found'), 404);
   }
 
   const existingExercise = eventRecord.openExercises.find((ex) => {
@@ -153,14 +157,17 @@ exports.addExcercise = async (req, res) => {
   });
 
   if (existingExercise) {
-    return res.status(400).send({ error: "Exercise conflict." });
+    throwError(
+      req.t('messages.exercise_conflict'),
+      400,
+      "Na daný dátum a čas už je vytvorené cvičenie."
+    );
   }
 
   const exercise = await Exercise.findOne({ _id: req.body.exercise });
   if (!exercise) {
     return res.status(404).send();
   }
-
 
   const newExercise = {
     date: req.body.date,
@@ -199,14 +206,14 @@ exports.editExercise = [
 
     const eventRecord = await Event.findOne({ _id: eventId });
     if (!eventRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.event_not_found'), 404);
     }
 
     const exerciseRecord = eventRecord.openExercises.find(
       (exercise) => exercise._id.toString() === exerciseId
     );
     if (!exerciseRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.exercise_not_found'), 404);
     }
 
     try {
@@ -237,11 +244,10 @@ exports.removeExercise = async (req, res) => {
       );
       res.status(200).send({});
     } catch (error) {
-      console.error("Error removing exercise:", error);
-      return res.status(500).json({ error: `${req.t("messages.database_error")}: ${error.message}` });
+      throwError(req.t('messages.database_error'), 500);
     }
   } else {
-    return res.status(404).json({ error: req.t("messages.record_not_exists") });
+    throwError(req.t('messages.record_not_exists'), 404);
   }
 };
 
@@ -251,21 +257,21 @@ exports.updateAttendeeStatus = async (req, res) => {
 
   const eventRecord = await Event.findById(eventId);
   if (!eventRecord) {
-    return res.status(404).send({ error: "Event not found" });
+    throwError(req.t('messages.event_not_found'), 404);
   };
 
   const exercise = eventRecord.openExercises.find(
     (ex) => ex._id.toString() === exerciseId
   );
   if (!exercise) {
-    return res.status(404).send({ error: "Exercise not found in event" });
+    throwError(req.t('messages.exercise_not_found'), 404);
   }
 
   const attendee = exercise.attendees.find(
     (att) => att._id.toString() === attendeeId
   );
   if (!attendee) {
-    return res.status(404).send({ error: "Attendee not found" });
+    throwError(req.t('messages.attendee_not_found'), 404);
   }
 
   attendee.approvalStatus = approvalStatus;
@@ -288,35 +294,39 @@ exports.sendApplication = [
 
     const eventRecord = await Event.findOne({ _id: eventId });
     if (!eventRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.event_not_found'), 404);
     }
 
     const openExerciseRecord = eventRecord.openExercises.find(
       (exercise) => exercise._id.toString() === exerciseId
     );
     if (!openExerciseRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.exercise_not_found'), 404);
     }
 
     if (openExerciseRecord.status !== APPROVAL_STATUS_ENUM.APPROVED) {
-      return res.status(400).json({
-        error: "Nemôžete sa prihlásiť na cvičenie, pretože cvičenie nie je schválené.",
-      });
+      throwError(
+        req.t('validation.exercise_not_approved'),
+        404,
+        "Nemôžete sa prihlásiť, cvičenie nie je schválené."
+      );
     }
 
     const exerciseRecord = await Exercise.findOne({
       _id: openExerciseRecord.exercise.toString(),
     });
     if (!exerciseRecord) {
-      return res.status(404).send();
+      throwError(req.t('messages.exercise_not_found'), 404);
     }
 
     const applicationAlreadyExists = openExerciseRecord.attendees
       .some(attendee => attendee.teacher.toString() === req.user.user_id.toString());
     if (applicationAlreadyExists) {
-      return res.status(400).json({
-        error: "Už ste na dané cvičenie prihlásení.",
-      });
+      throwError(
+        req.t('validation.application_already_exists'),
+        400,
+        "Už ste sa prihlásili na toto cvičenie."
+      );
     }
 
     const maxAttendees = exerciseRecord.maxAttendees;
@@ -330,9 +340,11 @@ exports.sendApplication = [
       requestedAttendees > maxAttendees ||
       totalAttendees + requestedAttendees > maxAttendees
     ) {
-      return res.status(404).json({
-        error: "Zadaný počet účastníkov prekračuje maximálnu kapacitu.",
-      });
+      throwError(
+        req.t('validation.maximum_capacity_exceeded'),
+        400,
+        "Zadaný počet účastníkov prekračuje maximálnu kapacitu."
+      );
     }
 
     const newApplication = {
@@ -367,10 +379,10 @@ exports.getApplications = async (req, res) => {
       teacherId: req.user.user_id
     });
 
-    res.send(applications);
+    res.status(200).send(applications);
 
   } catch (error) {
-    res.status(500).send(error.message);
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -381,10 +393,10 @@ exports.getAllApplications = async (req, res) => {
     const exercises = await Exercise.find();
     const applications = await buildApplicationsData(events, exercises);
 
-    res.send(applications);
+    res.status(200).send(applications);
 
   } catch (error) {
-    res.status(500).send(error.message);
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -400,10 +412,10 @@ exports.getColleaguesApplications = async (req, res) => {
       colleagueIds: colleagueIds
     });
 
-    res.send(applications);
+    res.status(200).send(applications);
     
   } catch (error) {
-    res.status(500).send(error.message);
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -417,10 +429,10 @@ exports.getApplicationsHistory = async (req, res) => {
       filterFromDate: dateNow
     });
 
-    res.send(applications);
+    res.status(200).send(applications);
     
   } catch (error) {
-    res.status(500).send(error.message);
+    throwError(req.t('messages.server_error'), 500);
   }
 };
 
@@ -429,24 +441,24 @@ exports.editApplication = async (req, res) => {
 
   const eventRecord = await Event.findOne({ _id: eventId });
   if (!eventRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.event_not_found'), 404);
   }
 
   const exerciseRecord = eventRecord.openExercises.id(exerciseId);
   if (!exerciseRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.exercise_not_found'), 404);
   }
 
   const applicationRecord = exerciseRecord.attendees.id(applicationId);
   if (!applicationRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.record_not_exists'), 404);
   }
 
   // Update numOfAttendees if provided
   if (req.body.numOfAttendees !== undefined) {
     const parsedNum = Number(req.body.numOfAttendees);
     if (isNaN(parsedNum)) {
-      return res.status(400).json({ message: 'Invalid number of attendees' });
+      throwError(req.t('validation.invalid_number_of_attendees'), 400);
     }
     applicationRecord.numOfAttendees = parsedNum;
   }
@@ -465,7 +477,7 @@ exports.editApplication = async (req, res) => {
     await eventRecord.save();
     res.status(200).send({});
   } catch (error) {
-    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
+    throwError(req.t('messages.database_error'), 500);
   }
 };
 
@@ -475,7 +487,7 @@ exports.deleteApplication = async (req, res) => {
 
   const eventRecord = await Event.findOne({ _id: eventId });
   if (!eventRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.event_not_found'), 404);
   }
 
   const exerciseRecord = eventRecord.openExercises.find(
@@ -483,7 +495,7 @@ exports.deleteApplication = async (req, res) => {
   );
 
   if (!exerciseRecord) {
-    return res.status(404).send();
+    throwError(req.t('messages.exercise_not_found'), 404);
   }
 
   const applicationIndex = exerciseRecord.attendees.findIndex(
@@ -491,31 +503,37 @@ exports.deleteApplication = async (req, res) => {
   );
 
   if (applicationIndex === -1) {
-    return res.status(404).send();
+    throwError(req.t('messages.record_not_exists'), 404);
   }
 
   exerciseRecord.attendees.splice(applicationIndex, 1);
-  await eventRecord.save();
-  res.send({});
 
+  try {
+    await eventRecord.save();
+    res.status(200).send({});
 
+  } catch (error) {
+    throwError(req.t('messages.database_error'), 500);
+  }
 };
 
 exports.togglePublished = async (req, res) => {
   const { eventId } = req.params;
 
+  const event = await Event.findById(eventId);
+
+  if (!event) {
+    throwError(req.t('messages.record_not_exists'), 404);
+  }
+
+  event.published = !event.published;
+
   try {
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    event.published = !event.published;
     await event.save();
-
     res.json({ success: true, published: event.published });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    throwError(req.t('messages.database_error'), 500);
   }
 };
