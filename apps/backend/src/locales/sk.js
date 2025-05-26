@@ -15,7 +15,11 @@ exports.sk = {
         record_not_exists: 'Záznam neexistuje',
         in: 'Príchod',
         out: 'Odchod',
-        error: 'Chyba'
+        error: 'Chyba',
+        event_not_found: 'Event nebol nájdený',
+        exercise_not_found: 'Cvičenie nebolo nájdené',
+        attendee_not_found: 'Attendee nebol nájdený',
+        server_error: 'Chyba servera',
     },
 
     validation: {
@@ -32,7 +36,13 @@ exports.sk = {
         empty_title: 'Názov je prázdny',
         empty_content: 'Obsah je prázdny',
         invalid_email: 'Email je povinný, alebo ste zadali neplatný email',
-        already_exists_record: 'Pre daný deň a osobu už existuje záznam.'
+        already_exists_record: 'Pre daný deň a osobu už existuje záznam.',
+        invalid_number_of_attendees: 'Neplatný počet účastníkov',
+        event_already_exists: 'Udalosť s týmto názvom už existuje',
+        exercise_conflict: 'Na daný dátum a čas už je vytvorené cvičenie',
+        exercise_not_approved: 'Nemôžete sa prihlásiť, lebo cvičenie nebolo schválené',
+        application_already_exists: 'Už ste sa prihlásili na toto cvičenie',
+        exercise_capacity_exceeded: 'Kapacita cvičenia bola prekročená'
     },
     email: {
         email_send_activate_link: 'Aktivačný link bol odoslaný na váš email',

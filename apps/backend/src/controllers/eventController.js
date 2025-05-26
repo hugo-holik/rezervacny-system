@@ -8,6 +8,8 @@ const { sendApplicationSchema } = require("../schemas/event.schema");
 const { buildApplicationsData } = require("../services/applicationsHelper");
 const externalSchool = require("../models/externalSchool");
 const exercise = require("../models/exercise");
+const { editEventSchema, createEventSchema, updateExerciseInEventSchema } = require("../schemas/event.schema");
+
 
 exports.get = async (req, res) => {
   try {
@@ -41,22 +43,13 @@ exports.getEventById = async (req, res) => {
 };
 
 exports.create = [
-  body("name").not().isEmpty().withMessage("validation.empty_name"),
-  body("datefrom").not().isEmpty().withMessage("validation.empty_datefrom"),
-  body("dateto").not().isEmpty().withMessage("validation.empty_dateto"),
-  body("dateClosing").not().isEmpty().withMessage("validation.empty_dateClosing"),
-
+  validate(createEventSchema),
   async (req, res) => {
-    const validationErrors = validationResult(req);
-    if (!validationErrors.isEmpty()) {
-      return res.status(400).json({ errors: validationErrors.array() });
-    }
-
-    const { name, datefrom, dateto, dateClosing } = req.body;
+    const { name, datefrom, dateto, dateClosing } = validated(req);
 
     const existingEvent = await Event.findOne({ name });
     if (existingEvent) {
-      return res.status(400).json({ error: req.t("validation.event_already_exist") });
+      throwError(req.t('validation.event_already_exists'), 400);
     }
 
     const newEvent = new Event({
@@ -70,23 +63,17 @@ exports.create = [
     try {
       await newEvent.save();
       res.status(201).send({});
+
     } catch (err) {
-      return res.status(500).json({ error: `${req.t("messages.database_error")}: ${err.message}` });
+      throwError(req.t('messages.database_error'), 500);
     }
   },
 ];
 
 exports.edit = [
-  body("name").optional(),
-  body("datefrom").optional(),
-  body("dateto").optional(),
-  body("dateClosing").optional(),
-
+  validate(editEventSchema),
   async (req, res) => {
-    const matched = matchedData(req, {
-      includeOptional: true,
-      onlyValidData: true,
-    });
+    const validatedData = validated(req);
 
     const eventRecord = await Event.findOne({ _id: req.params.id });
     if (!eventRecord) {
@@ -94,14 +81,15 @@ exports.edit = [
     }
 
     try {
-      for (const key in matched) {
-        if (matched[key] !== undefined) {
-          eventRecord[key] = matched[key];
+      for (const key in validatedData) {
+        if (validatedData[key] !== undefined) {
+          eventRecord[key] = validatedData[key];
         }
       }
 
       await eventRecord.save();
       return res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
@@ -157,16 +145,12 @@ exports.addExcercise = async (req, res) => {
   });
 
   if (existingExercise) {
-    throwError(
-      req.t('messages.exercise_conflict'),
-      400,
-      "Na daný dátum a čas už je vytvorené cvičenie."
-    );
+    throwError(req.t('validation.exercise_conflict'), 400);
   }
 
   const exercise = await Exercise.findOne({ _id: req.body.exercise });
   if (!exercise) {
-    return res.status(404).send();
+    throwError(req.t('messages.exercise_not_found'), 404);
   }
 
   const newExercise = {
@@ -184,23 +168,16 @@ exports.addExcercise = async (req, res) => {
   try {
     await eventRecord.save();
     res.status(200).send({});
+
   } catch (err) {
     return res.status(500).json({ error: `${req.t("messages.database_error")}: ${err.message}` });
   }
 };
 
 exports.editExercise = [
-  body("date").optional(),
-  body("startTime").optional(),
-  body("exercise").optional(),
-  body("status").optional(),
-  body("note").optional(),
-
+  validate(updateExerciseInEventSchema),
   async (req, res) => {
-    const matched = matchedData(req, {
-      includeOptional: true,
-      onlyValidData: true,
-    });
+    const validatedData = validated(req);
 
     const { eventId, exerciseId } = req.params;
 
@@ -217,15 +194,15 @@ exports.editExercise = [
     }
 
     try {
-      for (const key in matched) {
-        if (matched[key] !== undefined) {
-          exerciseRecord[key] = matched[key];
+      for (const key in validatedData) {
+        if (validatedData[key] !== undefined) {
+          exerciseRecord[key] = validatedData[key];
         }
       }
 
       await eventRecord.save();
-
       res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
@@ -305,11 +282,7 @@ exports.sendApplication = [
     }
 
     if (openExerciseRecord.status !== APPROVAL_STATUS_ENUM.APPROVED) {
-      throwError(
-        req.t('validation.exercise_not_approved'),
-        404,
-        "Nemôžete sa prihlásiť, cvičenie nie je schválené."
-      );
+      throwError(req.t('validation.exercise_not_approved'), 404);
     }
 
     const exerciseRecord = await Exercise.findOne({
@@ -322,11 +295,7 @@ exports.sendApplication = [
     const applicationAlreadyExists = openExerciseRecord.attendees
       .some(attendee => attendee.teacher.toString() === req.user.user_id.toString());
     if (applicationAlreadyExists) {
-      throwError(
-        req.t('validation.application_already_exists'),
-        400,
-        "Už ste sa prihlásili na toto cvičenie."
-      );
+      throwError(req.t('validation.application_already_exists'), 400);
     }
 
     const maxAttendees = exerciseRecord.maxAttendees;
@@ -340,11 +309,7 @@ exports.sendApplication = [
       requestedAttendees > maxAttendees ||
       totalAttendees + requestedAttendees > maxAttendees
     ) {
-      throwError(
-        req.t('validation.maximum_capacity_exceeded'),
-        400,
-        "Zadaný počet účastníkov prekračuje maximálnu kapacitu."
-      );
+      throwError(req.t('validation.exercise_capacity_exceeded'), 400);
     }
 
     const newApplication = {

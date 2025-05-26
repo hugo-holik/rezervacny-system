@@ -22,11 +22,11 @@ const createEventSchema = Joi.object({
     }),
     openExercises: Joi.array().items(
         Joi.object({
-            exerciseId: Joi.string().required().messages({
+            exercise: Joi.string().required().messages({
                 "string.empty": "Exercise ID is required",
             }),
-            attendees: Joi.array().items(Joi.string()).messages({
-                "array.base": "Attendees must be an array of strings"
+            attendees: Joi.array().optional().messages({
+                "array.base": "Attendees must be an array"
             })
         })
     ).optional(),
@@ -51,11 +51,11 @@ const editEventSchema = Joi.object({
     }),
     openExercises: Joi.array().items(
         Joi.object({
-            exerciseId: Joi.string().required().messages({
+            exercise: Joi.string().required().messages({
                 "string.empty": "Exercise ID is required",
             }),
-            attendees: Joi.array().items(Joi.string()).messages({
-                "array.base": "Attendees must be an array of strings"
+            attendees: Joi.array().optional().messages({
+                "array.base": "Attendees must be an array"
             })
         })
     ).optional()
@@ -67,8 +67,31 @@ const sendApplicationSchema = Joi.object({
     })
 }).unknown(false); // Disallow unknown keys
 
+const updateExerciseInEventSchema = Joi.object({
+  date: Joi.date().iso().optional().messages({
+    'date.base': 'Date must be a valid ISO format (YYYY-MM-DD)',
+    'date.format': 'Invalid date format. Use YYYY-MM-DD'
+  }),
+  startTime: Joi.string()
+    .pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/) // HH:MM format
+    .optional()
+    .messages({
+      'string.pattern.base': 'startTime must be in HH:MM format'
+    }),
+  exercise: Joi.string().optional(),
+  exerciseName: Joi.string().optional(),
+  status: Joi.string().optional(),
+// status: Joi.string().valid('pending', 'completed', 'cancelled').optional().messages({
+//  'any.only': 'Status must be one of: pending, completed, cancelled'
+// }),
+  note: Joi.string().max(500).optional().messages({
+    'string.max': 'Note cannot exceed 500 characters'
+  })
+}).options({ abortEarly: false }); // Show all validation errors at once
+
 module.exports = {
     createEventSchema,
     editEventSchema,
-    sendApplicationSchema
+    sendApplicationSchema,
+    updateExerciseInEventSchema
 };
