@@ -7,9 +7,11 @@ const { createExternalSchoolSchema, editExternalSchoolSchema } = require("../sch
 exports.get = async (req, res) => {
   try {
     const records = await ExternalSchool.find({});
+
     res.status(200).send(records);
+
   } catch (err) {
-    throwError(err.message, 500);
+    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
   }
 };
 
@@ -17,11 +19,13 @@ exports.getById = async (req, res) => {
   try {
     const record = await ExternalSchool.findById(req.params.id);
     if (!record) {
-      return res.status(404).send({ message: req.t("messages.record_not_exists") });
+      throwError(req.t("messages.record_not_exists"), 404);
     }
+
     res.status(200).send(record);
+
   } catch (err) {
-    throwError(err.message, 500);
+    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
   }
 };
 
@@ -50,6 +54,7 @@ exports.create = [
 
     try {
       await newSchool.save();
+
       res.status(201).send({});
 
     } catch (err) {
@@ -65,7 +70,7 @@ exports.edit = [
 
     const record = await ExternalSchool.findOne({ _id: req.params.id });
     if (!record) {
-      return res.status(404).send();
+      throwError(req.t("messages.record_not_exists"), 404);
     }
 
     try {
@@ -76,6 +81,7 @@ exports.edit = [
       }
 
       await record.save();
+
       return res.status(200).send({});
 
     } catch (error) {
@@ -86,13 +92,17 @@ exports.edit = [
 
 exports.remove = async (req, res) => {
   const record = await ExternalSchool.findOne({ _id: req.params.id });
+
   if (record) {
     try {
       await ExternalSchool.deleteOne();
+      
       res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
+
   } else {
     throwError(req.t("messages.record_not_exists"), 404);
   }
