@@ -1,6 +1,7 @@
 const { throwError, errorFormatter } = require("../util/universal");
 const { body, validationResult, matchedData } = require("express-validator");
 const ExternalSchool = require("../models/externalSchool");
+const { validate, validated } = require("../util/validation");
 const { createExternalSchoolSchema, editExternalSchoolSchema } = require("../schemas/externalSchool.schema");
 
 exports.get = async (req, res) => {
@@ -76,7 +77,7 @@ exports.edit = [
 
       await record.save();
       return res.status(200).send({});
-      
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
