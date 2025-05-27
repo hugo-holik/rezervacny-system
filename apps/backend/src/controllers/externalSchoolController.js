@@ -1,7 +1,7 @@
 const { throwError, errorFormatter } = require("../util/universal");
 const { body, validationResult, matchedData } = require("express-validator");
-
 const ExternalSchool = require("../models/externalSchool");
+const { createExternalSchoolSchema, editExternalSchoolSchema } = require("../schemas/externalSchool.schema");
 
 exports.get = async (req, res) => {
   try {
@@ -25,17 +25,14 @@ exports.getById = async (req, res) => {
 };
 
 exports.create = [
-  body("name").not().isEmpty().withMessage("validation.empty_name"),
-  body("address").not().isEmpty().withMessage("validation.empty_address"),
-  body("contactPerson").optional(),
-  body("telNumber").optional(),
+  validate(createExternalSchoolSchema),
   async (req, res) => {
-    throwError(
-      req.t("messages.createExternalSchool"),
-      400,
-      validationResult(req).formatWith(errorFormatter)
-    );
-    const { name, address, contactPerson, telNumber } = req.body;
+    const { 
+      name, 
+      address, 
+      contactPerson, 
+      telNumber 
+    } = validated(req.body);
 
     const existingRecord = await ExternalSchool.findOne({ name });
 
@@ -52,36 +49,34 @@ exports.create = [
 
     try {
       await newSchool.save();
+      res.status(201).send({});
+
     } catch (err) {
       throwError(`${req.t("messages.database_error")}: ${err.message}`, 500);
     }
-    res.status(201).send({});
-  },
+  }
 ];
 
 exports.edit = [
-  body("address").optional(),
-  body("contactPerson").optional(),
-  body("name").optional(),
-  body("telNumber").optional(),
+  validate(editExternalSchoolSchema),
   async (req, res) => {
-    const matched = matchedData(req, {
-      includeOptional: true,
-      onlyValidData: true,
-    });
+    const validatedData = validated(req);
+
     const record = await ExternalSchool.findOne({ _id: req.params.id });
     if (!record) {
       return res.status(404).send();
     }
 
     try {
-      for (const key in matched) {
-        if (matched[key] !== undefined) {
-          record[key] = matched[key];
+      for (const key in validatedData) {
+        if (validatedData[key] !== undefined) {
+          record[key] = validatedData[key];
         }
       }
+
       await record.save();
       return res.status(200).send({});
+      
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
