@@ -37,7 +37,7 @@ exports.create = [
       address, 
       contactPerson, 
       telNumber 
-    } = validated(req.body);
+    } = validated(req);
 
     const existingRecord = await ExternalSchool.findOne({ name });
 
@@ -96,7 +96,7 @@ exports.remove = async (req, res) => {
   if (record) {
     try {
       await ExternalSchool.deleteOne();
-      
+
       res.status(200).send({});
 
     } catch (error) {
