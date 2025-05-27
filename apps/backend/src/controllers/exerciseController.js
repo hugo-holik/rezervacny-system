@@ -5,16 +5,9 @@ const Exercise = require("../models/exercise");
 const { validate, validated } = require("../util/validation");
 //const Event = require("../models/events");
 
-exports.create = async (req, res) => {
-  try {
-    // Validate the incoming data
-    const { error } = createExerciseSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        errors: error.details.map((detail) => detail.message),
-      });
-    }
-
+exports.create = [
+  validate(createExerciseSchema),
+  async (req, res) => {
     const {
       name,
       program,
@@ -25,7 +18,7 @@ exports.create = async (req, res) => {
       startTimes,
       maxAttendees,
       color,
-    } = req.body;
+    } = validated(req);
 
     const existingExercise = await Exercise.findOne({ name });
     if (existingExercise) {
@@ -47,20 +40,20 @@ exports.create = async (req, res) => {
     try {
       await newExercise.save();
       res.status(201).send({});
+
     } catch (err) {
       return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
     }
-  } catch (err) {
-    return res.status(500).json({ message: `${req.t("messages.database_error")}: ${err.message}` });
   }
-};
+];
 
 exports.getAll = async (req, res) => {
   try {
     const records = await Exercise.find().populate('leads', 'name surname');
     res.status(200).send(records);
+
   } catch (err) {
-    throwError(err.message, 500);
+    throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);  
   }
 };
 
@@ -71,15 +64,15 @@ exports.edit = [
     
     const record = await Exercise.findOne({ _id: req.params.id });
     if (!record) {
-      return res.status(404).send();
+      throwError(req.t("messages.record_not_exists"), 404);
     }
 
     Object.assign(record, data);
 
     try {
       await record.save();
-      
       return res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
@@ -88,20 +81,23 @@ exports.edit = [
 
 exports.remove = async (req, res) => {
   const exerciseId = req.params.id;
+
   const record = await Exercise.findOne({ _id: exerciseId });
+
   if (record) {
     try {
       // await Event.updateMany(
       //   { openExercises: { $elemMatch: { exercise: exerciseId } } },
       //   { $pull: { openExercises: { exercise: exerciseId } } }
       // );
-      
-      await Exercise.deleteOne({ _id: exerciseId });
 
+      await Exercise.deleteOne({ _id: exerciseId });
       res.status(200).send({});
+
     } catch (error) {
       throwError(`${req.t("messages.database_error")}: ${error.message}`, 500);
     }
+
   } else {
     throwError(req.t("messages.record_not_exists"), 404);
   }
