@@ -8,6 +8,7 @@ import {
   useGetUserMeQuery,
   useSendApplicationMutation
 } from '@app/redux/api';
+import ApplicationModal from './components/ApplicationModal';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -116,29 +117,7 @@ const EventDetail = () => {
     setNumOfAttendees(1);
   };
 
-  const handleSubmitApplication = async () => {
-    if (!selectedExercise || !numOfAttendees) return;
 
-    const maxAttendees = selectedExercise.exercise.maxAttendees;
-
-     if (Number(numOfAttendees) > maxAttendees) {
-      toast.error(`Maximálny počet účastníkov je ${maxAttendees}`);
-      return;
-    }
-
-    try {
-      await sendApplication({
-        eventId,
-        exerciseId: selectedExercise._id,
-        numOfAttendees: Number.parseInt(numOfAttendees)
-      }).unwrap();
-      toast.success('Prihlásenie bolo úspešné');
-      handleCloseApplicationDialog();
-    } catch (error) {
-      toast.error('Chyba pri prihlasovaní');
-      console.error('Application error:', error);
-    }
-  };
 
   const handleApproveExercise = async (exerciseId) => {
     try {
@@ -295,7 +274,7 @@ const EventDetail = () => {
           <Box
             sx={{
               '& .vertical-align-center': {
-                display: 'flex',
+                display: 'block',
                 alignItems: 'center',
                 height: '100%'
               },
@@ -336,56 +315,16 @@ const EventDetail = () => {
         )}
       </Paper>
 
-      {/* Application Dialog */}
-      <Dialog open={openApplicationDialog} onClose={handleCloseApplicationDialog}>
-        <DialogTitle>Prihlásenie na cvičenie</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2, minWidth: 300 }}>
-            <Typography variant="body1" gutterBottom>
-              <strong>Cvičenie:</strong> {selectedExercise?.exerciseName}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Dátum:</strong> {selectedExercise && formatDate(selectedExercise.date)}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Čas:</strong> {selectedExercise?.startTime}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Maximálny počet učastnikov:</strong> {selectedExercise?.exercise.maxAttendees}
-            </Typography>
-            <TextField
-              label="Počet účastníkov"
-              type="number"
-              fullWidth
-              margin="normal"
-              value={numOfAttendees}
-              onChange={(e) => setNumOfAttendees(e.target.value)}
-              inputProps={{ 
-                min: 1 ,
-                max: selectedExercise?.exercise.maxAttendees || undefined
-                }}
-                error = {
-                  !!numOfAttendees && Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees
-                }
-                helperText={
-                  !!numOfAttendees && Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees
-                    ?`Maximálny počet účastníkov je ${selectedExercise.exercise.maxAttendees}`
-                    : ''
-                }
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseApplicationDialog}>Zrušiť</Button>
-          <Button
-            onClick={handleSubmitApplication}
-            variant="contained"
-            disabled={!numOfAttendees || numOfAttendees < 1 || Number(numOfAttendees) > selectedExercise?.exercise.maxAttendees}
-          >
-            Potvrdiť
-          </Button>
-        </DialogActions>
-      </Dialog>
+       <ApplicationModal
+          open={openApplicationDialog}
+          onClose={handleCloseApplicationDialog}
+          selectedExercise={selectedExercise}
+          eventId={eventId}
+          onSuccess={() => {
+            // případně aktualizuj data nebo něco dalšího po úspěchu
+          }}
+        />
+
 
       {isPrivileged && (
         <Box

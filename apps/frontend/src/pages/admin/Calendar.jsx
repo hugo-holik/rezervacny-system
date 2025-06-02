@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
 import './CalendarCustom.css';
 import { useNavigate } from 'react-router-dom';
+import ApplicationModal from './components/ApplicationModal';
 
 // Set moment to use Slovak locale
 moment.locale('sk', {
@@ -55,11 +56,13 @@ const Calendar = () => {
   const [combinedEvents, setCombinedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState(null);
   const navigate = useNavigate();
   
 
 
-
+/*
   useEffect(() => {
   if (events) {
     // Mapni eventy (len publikované)
@@ -107,7 +110,45 @@ const Calendar = () => {
     setCombinedEvents([...mappedEvents, ...mappedExercises]);
   }
 }, [events]);
+*/
+ 
+ //Len cvicenia
+  useEffect(() => {
+    if (events) {
+      const mappedExercises = events
+        .filter(event => event.published && event.openExercises && event.openExercises.length > 0)
+        .flatMap(event => 
+          event.openExercises.map(openExercise => {
+            const startMoment = moment(openExercise.date);
+            const durationHours = openExercise.exercise?.duration || 1; // fallback ak duration nie je
+            const endMoment = startMoment.clone().add(durationHours, 'hours');
 
+            return {
+              _id: openExercise._id.$oid || openExercise._id,  // uprav podľa formátu
+              eventId: event._id.$oid || event._id,
+              title: openExercise.exerciseName || openExercise.name,
+              start: startMoment.toDate(),
+              end: endMoment.toDate(),
+              allDay: false,
+              color: openExercise.color || '#2196f3',
+              type: 'exercise',
+              description: openExercise.note || '',
+              attendeesCount: openExercise.attendees.length,
+              
+              // Doplnené polia pre ApplicationModal
+              exerciseName: openExercise.exerciseName,
+              date: openExercise.date ? moment(openExercise.date).format('DD.MM.YYYY') : '',
+              startTime: openExercise.startTime,
+              exercise: {
+                maxAttendees: openExercise.exercise?.maxAttendees || 20  // daj nejaký fallback
+              }
+            };
+          })
+        );
+
+      setCombinedEvents(mappedExercises);
+    }
+  }, [events]);
 
 
   if (isExercisesLoading || isEventsLoading) return <div>Načítavanie...</div>;
@@ -120,11 +161,29 @@ const Calendar = () => {
   
   const handleGoToDetails = () => {
     if (selectedEvent && selectedEvent._id) {
-      navigate(`/events/${selectedEvent._id}`);
+      navigate(`/events/${selectedEvent.eventId}`);
     } else {
       console.warn('ID udalosti nie je dostupné.');
     }
   };
+  const CustomEvent = ({ event }) => (
+    <span style={{
+      fontSize: '0.75rem',
+      fontWeight: 500,
+      whiteSpace: 'normal',
+      overflow: 'visible',
+      textOverflow: 'initial',
+      display: 'block'
+    }}>
+      {event.title}
+    </span>
+  );
+
+  const minTime = new Date();
+  minTime.setHours(8, 0, 0, 0);
+
+  const maxTime = new Date();
+  maxTime.setHours(19, 0, 0, 0);
   
   return (
     <div className={`calendar-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
@@ -138,7 +197,10 @@ const Calendar = () => {
           onSelectEvent={handleEventClick}
           style={{ height: '75vh' }}
           messages={messages}
-          culture="sk" // This ensures proper localization
+          culture="sk" 
+          components={{
+            event: CustomEvent,
+          }}
           formats={{
             monthHeaderFormat: 'MMMM YYYY', // Full month name in Slovak
             dayFormat: 'D. MMMM', // Day with full month name
@@ -166,6 +228,8 @@ const Calendar = () => {
               }
             };
           }}
+          min={minTime}
+          max={maxTime}
         />
       </div>
 
@@ -632,9 +696,42 @@ const Calendar = () => {
             >
               Prejsť na detaily
             </button>
+            <button
+              onClick={() => {
+                setIsModalOpen(false);
+                setSelectedExercise(selectedEvent);
+                setIsApplicationModalOpen(true);
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '6px',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                backgroundColor: '#4caf50',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                ':hover': {
+                  backgroundColor: '#3d8b40'
+                }
+              }}
+            >
+              Prihlásiť sa na cvicenie
+            </button>
           </div>
         </div>
       </Modal>
+      <ApplicationModal
+        open={isApplicationModalOpen}
+        onClose={() => setIsApplicationModalOpen(false)}
+        selectedExercise={selectedExercise}
+        eventId={selectedEvent?.eventId} // ak potrebuješ
+        onSuccess={() => {
+          // napr. reload dát alebo ďalšia logika
+          setIsApplicationModalOpen(false);
+        }}
+      />
     </div>
   );
 };

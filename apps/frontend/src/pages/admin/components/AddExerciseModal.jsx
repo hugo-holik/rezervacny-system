@@ -85,9 +85,9 @@ const AddExerciseModal = ({ open, onClose }) => {
     const durationInMinutes = durationNum * 60;
     const endTotalMinutes = startTotalMinutes + durationInMinutes;
 
-    const WORK_START = 7 * 60;         // 07:00
-    const WORK_START_LIMIT = 19 * 60;  // 19:00
-    const WORK_END = 20 * 60;          // 20:00
+    const WORK_START = 8 * 60;         // 08:00
+    const WORK_START_LIMIT = 17 * 60;  // 17:00
+    const WORK_END = 18 * 60;          // 18:00
 
     if (startTotalMinutes < WORK_START || startTotalMinutes > WORK_START_LIMIT) return false;
     if (endTotalMinutes > WORK_END) return false;

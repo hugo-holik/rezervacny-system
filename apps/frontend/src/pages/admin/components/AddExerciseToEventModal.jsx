@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -40,6 +40,15 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
   const { data: exercises = [] } = useGetAllExercisesQuery();
   const { data: events = [] } = useGetAllEventsQuery();
 
+
+   useEffect(() => {
+    if (open) {
+      setDate(null);
+      setExerciseInput('');
+      setNote('');
+    }
+  }, [open]);
+  
   if (!eventData) return null;
 
   const eventStart = new Date(eventData.datefrom);
@@ -75,6 +84,8 @@ const AddExerciseToEventModal = ({ open, onClose, eventData }) => {
     room: selectedExercise?.room,
     label: `${exercises.find(e => e._id === exerciseId)?.name} – ${time}`
   } : null;
+
+
 
   const formatDateTime = (isoDate) => {
     const date = new Date(isoDate);
