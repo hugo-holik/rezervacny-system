@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
-import './CalendarCustom.css';
 import { useNavigate } from 'react-router-dom';
+import './CalendarCustom.css';
 import ApplicationModal from './components/ApplicationModal';
 
 // Set moment to use Slovak locale
@@ -43,10 +43,11 @@ const messages = {
 };
 
 const Calendar = () => {
-  const { data: exercises, 
-    isLoading: isExercisesLoading, 
+  const {
+    data: exercises,
+    isLoading: isExercisesLoading,
     isError: isExercisesError
-   } = useGetAllExercisesQuery();
+  } = useGetAllExercisesQuery();
   const {
     data: events,
     isLoading: isEventsLoading,
@@ -59,10 +60,8 @@ const Calendar = () => {
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const navigate = useNavigate();
-  
 
-
-/*
+  /*
   useEffect(() => {
   if (events) {
     // Mapni eventy (len publikované)
@@ -111,36 +110,44 @@ const Calendar = () => {
   }
 }, [events]);
 */
- 
- //Len cvicenia
+
+  //Len cvicenia
   useEffect(() => {
-    if (events) {
+    if (events && exercises) {
+      // Build a map of exerciseId -> color
+      const exerciseColorMap = {};
+      exercises.forEach((ex) => {
+        exerciseColorMap[ex._id] = ex.color;
+      });
+
       const mappedExercises = events
-        .filter(event => event.published && event.openExercises && event.openExercises.length > 0)
-        .flatMap(event => 
-          event.openExercises.map(openExercise => {
+        .filter((event) => event.published && event.openExercises && event.openExercises.length > 0)
+        .flatMap((event) =>
+          event.openExercises.map((openExercise) => {
             const startMoment = moment(openExercise.date);
-            const durationHours = openExercise.exercise?.duration || 1; // fallback ak duration nie je
+            const durationHours = openExercise.exercise?.duration || 1;
             const endMoment = startMoment.clone().add(durationHours, 'hours');
+            // Try to get color from exerciseColorMap using exercise._id
+            const exerciseId =
+              openExercise.exercise?._id || openExercise.exerciseId || openExercise._id;
+            const color = exerciseColorMap[exerciseId] || openExercise.color || '#2196f3';
 
             return {
-              _id: openExercise._id.$oid || openExercise._id,  // uprav podľa formátu
+              _id: openExercise._id.$oid || openExercise._id,
               eventId: event._id.$oid || event._id,
               title: openExercise.exerciseName || openExercise.name,
               start: startMoment.toDate(),
               end: endMoment.toDate(),
               allDay: false,
-              color: openExercise.color || '#2196f3',
+              color,
               type: 'exercise',
               description: openExercise.note || '',
               attendeesCount: openExercise.attendees.length,
-              
-              // Doplnené polia pre ApplicationModal
               exerciseName: openExercise.exerciseName,
               date: openExercise.date ? moment(openExercise.date).format('DD.MM.YYYY') : '',
               startTime: openExercise.startTime,
               exercise: {
-                maxAttendees: openExercise.exercise?.maxAttendees || 20  // daj nejaký fallback
+                maxAttendees: openExercise.exercise?.maxAttendees || 20
               }
             };
           })
@@ -148,8 +155,7 @@ const Calendar = () => {
 
       setCombinedEvents(mappedExercises);
     }
-  }, [events]);
-
+  }, [events, exercises]);
 
   if (isExercisesLoading || isEventsLoading) return <div>Načítavanie...</div>;
   if (isExercisesError || isEventsError) return <div>Chyba načítavania</div>;
@@ -158,7 +164,7 @@ const Calendar = () => {
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
-  
+
   const handleGoToDetails = () => {
     if (selectedEvent && selectedEvent._id) {
       navigate(`/events/${selectedEvent.eventId}`);
@@ -167,14 +173,16 @@ const Calendar = () => {
     }
   };
   const CustomEvent = ({ event }) => (
-    <span style={{
-      fontSize: '0.75rem',
-      fontWeight: 500,
-      whiteSpace: 'normal',
-      overflow: 'visible',
-      textOverflow: 'initial',
-      display: 'block'
-    }}>
+    <span
+      style={{
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        whiteSpace: 'normal',
+        overflow: 'visible',
+        textOverflow: 'initial',
+        display: 'block'
+      }}
+    >
       {event.title}
     </span>
   );
@@ -184,7 +192,7 @@ const Calendar = () => {
 
   const maxTime = new Date();
   maxTime.setHours(19, 0, 0, 0);
-  
+
   return (
     <div className={`calendar-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
       <div className="calendar-box">
@@ -197,9 +205,9 @@ const Calendar = () => {
           onSelectEvent={handleEventClick}
           style={{ height: '75vh' }}
           messages={messages}
-          culture="sk" 
+          culture="sk"
           components={{
-            event: CustomEvent,
+            event: CustomEvent
           }}
           formats={{
             monthHeaderFormat: 'MMMM YYYY', // Full month name in Slovak
