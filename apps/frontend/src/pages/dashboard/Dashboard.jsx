@@ -1,8 +1,8 @@
 import {
+  useGetAllApplicationsQuery,
   useGetAllEventsQuery,
   useGetAllExercisesQuery,
   useGetAllExternalSchoolsQuery,
-  useGetApplicationsQuery,
   useGetUsersListQuery
 } from '@app/redux/api';
 import { Box, CircularProgress, Container, Grid, Paper, Typography } from '@mui/material';
@@ -35,7 +35,7 @@ const Dashboard = () => {
     useGetAllExternalSchoolsQuery();
   const { data: exercisesData, isLoading: exercisesLoading } = useGetAllExercisesQuery();
   const { data: eventsData, isLoading: eventsLoading } = useGetAllEventsQuery();
-  const { data: applicationsData, isLoading: applicationsLoading } = useGetApplicationsQuery();
+  const { data: applicationsData, isLoading: applicationsLoading } = useGetAllApplicationsQuery();
 
   const [usersCount, setUsersCount] = useState(0);
   const [externalSchoolsCount, setExternalSchoolsCount] = useState(0);
