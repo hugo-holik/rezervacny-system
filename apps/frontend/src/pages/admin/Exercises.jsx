@@ -27,11 +27,17 @@ const Exercises = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
 
-  const roleCheck = ['Zamestnanec UNIZA', 'Správca cvičení'].includes(currentUser.role);
+  const canViewAll = currentUser?.isAdmin || currentUser.role === 'Správca cvičení';
+  const isEmployee = currentUser.role === 'Zamestnanec UNIZA';
   const currentUserId = currentUser._id;
 
-  const filterExercises = currentUser?.isAdmin || currentUser.role === 'Správca cvičení'
-    ? data : data?.filter((exercise) => exercise.leads.includes(currentUserId));
+  const filteredExercises = canViewAll
+  ? data
+  : data?.filter(exercise =>
+      exercise.leads?.some(lead => lead._id === currentUserId)
+    );
+
+
 
   const onRemoveHandler = async (id) => {
     if (!id) {
@@ -77,7 +83,7 @@ const Exercises = () => {
         return '-';
       }
     },
-    { field: 'duration', headerName: 'Trvanie (min)', flex: 1 },
+    { field: 'duration', headerName: 'Trvanie (hod)', flex: 1 },
     { field: 'maxAttendees', headerName: 'Max. počet účastníkov', flex: 1 },
     {
       field: 'leads',
@@ -100,10 +106,9 @@ const Exercises = () => {
       headerName: 'Akcie',
       width: 200,
       getActions: (params) => {
-        const isPrivileged = roleCheck || currentUser.isAdmin;
-
         const actions = [];
-        if (isPrivileged) {
+
+        
           actions.unshift(
             // Add privileged actions at the beginning
             <Tooltip key="edit" title="Upraviť cvičenie">
@@ -123,7 +128,7 @@ const Exercises = () => {
               </Tooltip>
             </ConfirmationDialog>
           );
-        }
+        
         return actions;
       }
     }
@@ -138,7 +143,6 @@ const Exercises = () => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }} justifyContent={'flex-end'} display={'flex'}>
-          {(roleCheck || currentUser.isAdmin) && (
             <Button
               sx={{ m: 1, minWidth: '15rem' }}
               variant="contained"
@@ -146,14 +150,13 @@ const Exercises = () => {
               onClick={() => setOpenAddModal(true)}
             >
               Pridaj cvičenie
-            </Button>
-          )}
+            </Button>   
         </Grid>
       </Grid>
       <Paper sx={{ mt: 2 }}>
         <DataGrid
           loading={isLoading}
-          rows={filterExercises || []}
+          rows={filteredExercises || []}
           columns={columns}
           getRowId={(row) => row._id}
           pageSizeOptions={[10, 20, 50]}

@@ -215,7 +215,6 @@ const filteredColleagueApplications = colleagueApplications?.filter(
       field: 'startTime',
       headerName: 'Začiatok',
       width: 80,
-      valueFormatter: (params) => formatDate(params, 'HH:mm')
     },
     { field: 'numOfAttendees', headerName: 'Počet účastníkov', flex: 1, type: 'number' },
     {
